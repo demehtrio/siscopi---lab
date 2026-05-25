@@ -4165,7 +4165,7 @@ export default function App() {
             label="Cadastro VTR" 
           />
           <MobileNavLink active={activeTab === 'checklist'} onClick={() => setActiveTab('checklist')} icon={<ClipboardList size={20} />} label="Checklist VTR" />
-          <MobileNavLink active={activeTab === 'qsh'} onClick={() => setActiveTab('qsh')} icon={<Siren size={20} className="text-red-500" />} label="Monitor QSH" />
+          <MobileNavLink active={activeTab === 'qsh'} onClick={() => setActiveTab('qsh')} icon={<img src="https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png" alt="" className="w-5 h-5 object-contain" />} label="Dentro do QSH" />
           {isAdmin && <MobileNavLink active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<SettingsIcon size={20} />} label="Ajustes" />}
         </nav>
 
@@ -4298,7 +4298,7 @@ export default function App() {
                     </div>
                   </div>
                   
-                  <div className="relative z-10 shrink-0 w-full md:w-auto">
+                  <div className="relative z-10 shrink-0 w-full md:w-auto flex flex-col sm:flex-row gap-3">
                     <a 
                       href="https://policiaagil.sds.pe.gov.br/" 
                       target="_blank" 
@@ -4308,6 +4308,15 @@ export default function App() {
                       <span>Acessar Polícia Ágil</span>
                       <ExternalLink size={16} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
                     </a>
+                    
+                    <button 
+                      onClick={() => setActiveTab('qsh')}
+                      className="w-full md:w-auto px-6 py-3.5 bg-red-600 hover:bg-red-500 text-white font-black rounded-2xl shadow-xl shadow-red-600/10 hover:shadow-red-600/25 transition-all text-center flex items-center justify-center gap-2.5 active:scale-98 group/btn_qsh"
+                    >
+                      <img src="https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png" alt="" className="w-5 h-5 object-contain" />
+                      <span>Dentro do QSH</span>
+                      <ChevronRight size={16} className="group-hover/btn_qsh:translate-x-0.5 transition-transform" />
+                    </button>
                   </div>
                 </div>
 
