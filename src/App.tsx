@@ -4270,53 +4270,84 @@ export default function App() {
                   </div>
                 </header>
 
-                {/* Banner Polícia Ágil */}
-                <div className="mb-8 p-6 sm:p-8 bg-gradient-to-r from-blue-950 via-blue-900 to-indigo-950 text-white rounded-[2.5rem] border border-blue-800/50 shadow-2xl overflow-hidden relative flex flex-col md:flex-row items-center justify-between gap-6 group">
-                  {/* Decorative background visual elements */}
-                  <div className="absolute top-0 right-0 p-24 bg-blue-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-blue-500/15 transition-all duration-500"></div>
-                  <div className="absolute bottom-0 left-0 p-16 bg-indigo-500/10 rounded-full -ml-12 -mb-12 blur-2xl"></div>
-                  
-                  <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left flex-1">
-                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center border border-white/20 shadow-md overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-300 p-2">
-                      <SafeImage 
-                        src="https://i.pinimg.com/originals/60/28/a5/6028a5b89ac1ab7f4ca8d2abf0712fc2.png" 
-                        alt="Polícia Ágil Logo" 
-                        className="w-full h-full object-contain" 
-                        width={56} 
-                        height={56} 
-                        icon={Siren} 
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                        <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">Polícia Ágil</h3>
-                        <span className="text-[10px] sm:text-xs font-black bg-yellow-500/25 border border-yellow-500/30 text-yellow-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider">SDS PE</span>
+                {/* Banners Individuais: Polícia Ágil & Dentro do QSH */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                  {/* Banner Polícia Ágil */}
+                  <div className="p-6 bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-950 text-white rounded-[2.5rem] border border-blue-800/50 shadow-2xl overflow-hidden relative flex flex-col justify-between gap-6 group">
+                    {/* Decorative background visual elements */}
+                    <div className="absolute top-0 right-0 p-16 bg-blue-500/10 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/15 transition-all duration-500"></div>
+                    
+                    <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center border border-white/20 shadow-md overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-300 p-2">
+                        <SafeImage 
+                          src="https://i.pinimg.com/originals/60/28/a5/6028a5b89ac1ab7f4ca8d2abf0712fc2.png" 
+                          alt="Polícia Ágil Logo" 
+                          className="w-full h-full object-contain" 
+                          width={56} 
+                          height={56} 
+                          icon={Siren} 
+                        />
                       </div>
-                      <p className="text-blue-200/85 text-sm font-medium leading-relaxed max-w-xl">
-                        Acesse a plataforma Polícia Ágil para realizar suas consultas junto à Secretaria de Defesa Social de Pernambuco.
-                      </p>
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                          <h3 className="text-xl font-black tracking-tight text-white">Polícia Ágil</h3>
+                          <span className="text-[9px] font-black bg-yellow-500/25 border border-yellow-500/30 text-yellow-300 px-2 py-0.5 rounded-full uppercase tracking-wider">SDS PE</span>
+                        </div>
+                        <p className="text-blue-200/85 text-xs sm:text-sm font-medium leading-relaxed">
+                          Acesse a plataforma Polícia Ágil para realizar suas consultas junto à Secretaria de Defesa Social de Pernambuco.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="relative z-10 w-full sm:w-auto self-end">
+                      <a 
+                        href="https://policiaagil.sds.pe.gov.br/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="w-full sm:w-auto px-5 py-3 bg-yellow-500 hover:bg-yellow-400 text-blue-950 font-black rounded-xl shadow-lg shadow-yellow-500/10 hover:shadow-yellow-500/25 transition-all text-center flex items-center justify-center gap-2 active:scale-98 group/btn text-sm"
+                      >
+                        <span>Acessar Polícia Ágil</span>
+                        <ExternalLink size={14} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                      </a>
                     </div>
                   </div>
-                  
-                  <div className="relative z-10 shrink-0 w-full md:w-auto flex flex-col sm:flex-row gap-3">
-                    <a 
-                      href="https://policiaagil.sds.pe.gov.br/" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="w-full md:w-auto px-6 py-3.5 bg-yellow-500 hover:bg-yellow-400 text-blue-950 font-black rounded-2xl shadow-xl shadow-yellow-500/10 hover:shadow-yellow-500/25 transition-all text-center flex items-center justify-center gap-2 active:scale-98 group/btn"
-                    >
-                      <span>Acessar Polícia Ágil</span>
-                      <ExternalLink size={16} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
-                    </a>
+
+                  {/* Banner Dentro do QSH */}
+                  <div className="p-6 bg-gradient-to-br from-red-950 via-red-900 to-rose-950 text-white rounded-[2.5rem] border border-red-800/30 shadow-2xl overflow-hidden relative flex flex-col justify-between gap-6 group">
+                    {/* Decorative background visual elements */}
+                    <div className="absolute top-0 right-0 p-16 bg-red-500/10 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-red-500/15 transition-all duration-500"></div>
                     
-                    <button 
-                      onClick={() => setActiveTab('qsh')}
-                      className="w-full md:w-auto px-6 py-3.5 bg-red-600 hover:bg-red-500 text-white font-black rounded-2xl shadow-xl shadow-red-600/10 hover:shadow-red-600/25 transition-all text-center flex items-center justify-center gap-2.5 active:scale-98 group/btn_qsh"
-                    >
-                      <img src="https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png" alt="" className="w-5 h-5 object-contain" />
-                      <span>Dentro do QSH</span>
-                      <ChevronRight size={16} className="group-hover/btn_qsh:translate-x-0.5 transition-transform" />
-                    </button>
+                    <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center border border-white/20 shadow-md overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-300 p-2">
+                        <SafeImage 
+                          src="https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png" 
+                          alt="QSH Logo" 
+                          className="w-full h-full object-contain" 
+                          width={56} 
+                          height={56} 
+                          icon={Siren} 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                          <h3 className="text-xl font-black tracking-tight text-white">Dentro do QSH</h3>
+                          <span className="text-[9px] font-black bg-red-500/25 border border-red-500/30 text-rose-300 px-2 py-0.5 rounded-full uppercase tracking-wider">Monitoramento</span>
+                        </div>
+                        <p className="text-red-200/85 text-xs sm:text-sm font-medium leading-relaxed">
+                          Acompanhe em tempo real a localização do efetivo e viaturas dentro do Quadrante de Segurança Habitacional (QSH).
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="relative z-10 w-full sm:w-auto self-end">
+                      <button 
+                        onClick={() => setActiveTab('qsh')}
+                        className="w-full sm:w-auto px-5 py-3 bg-red-600 hover:bg-red-500 text-white font-black rounded-xl shadow-lg shadow-red-600/10 hover:shadow-red-600/25 transition-all text-center flex items-center justify-center gap-2 active:scale-98 group/btn_qsh text-sm"
+                      >
+                        <span>Acessar Dentro do QSH</span>
+                        <ChevronRight size={14} className="group-hover/btn_qsh:translate-x-0.5 transition-transform" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
