@@ -719,9 +719,11 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
               {isAdmin && !isEditingGoals && (
                 <button 
                   onClick={() => setIsEditingGoals(true)}
-                  className="text-slate-400 hover:text-slate-800 transition"
+                  className="flex items-center gap-1 text-[9px] uppercase font-bold text-rose-700 bg-rose-100 hover:bg-rose-200 px-2 py-0.5 rounded transition shadow-sm ml-1"
+                  title="Editar Metas"
                 >
                   <Edit2 className="size-3" />
+                  <span>Editar</span>
                 </button>
               )}
             </div>
@@ -813,9 +815,11 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
               {isAdmin && !isEditingReductions && (
                 <button 
                   onClick={() => setIsEditingReductions(true)}
-                  className="text-slate-400 hover:text-slate-800 transition"
+                  className="flex items-center gap-1 text-[9px] uppercase font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded transition shadow-sm ml-1"
+                  title="Editar Reduções"
                 >
                   <Edit2 className="size-3" />
+                  <span>Editar</span>
                 </button>
               )}
             </div>
