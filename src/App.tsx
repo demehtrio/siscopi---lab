@@ -4334,7 +4334,7 @@ export default function App() {
                           <span className="text-[9px] font-black bg-red-500/25 border border-red-500/30 text-rose-300 px-2 py-0.5 rounded-full uppercase tracking-wider">Monitoramento</span>
                         </div>
                         <p className="text-red-200/85 text-xs sm:text-sm font-medium leading-relaxed">
-                          Acompanhe em tempo real a localização do efetivo e viaturas dentro do Quadrante de Segurança Habitacional (QSH).
+                          Acompanhe em tempo real sua localização dentro do Quadrante de Segurança de Homicídios (QSH).
                         </p>
                       </div>
                     </div>
