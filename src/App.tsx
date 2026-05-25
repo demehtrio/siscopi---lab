@@ -4104,8 +4104,8 @@ export default function App() {
             <SidebarLink 
               active={activeTab === 'qsh'} 
               onClick={() => setActiveTab('qsh')}
-              icon={<Siren size={20} className="text-red-600 animate-pulse" />}
-              label="Monitor QSH"
+              icon={<img src="https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png" alt="QSH Icon" className="w-5 h-5 object-contain" />}
+              label="Dentro do QSH"
               badge="WEB"
             />
             {isAdmin && (

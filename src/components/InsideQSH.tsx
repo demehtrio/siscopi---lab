@@ -618,11 +618,13 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
         {/* Header Title */}
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <div className="size-9 rounded-xl shadow-md border border-slate-100 overflow-hidden shrink-0 bg-blue-900 flex items-center justify-center text-white font-black text-xs">
-              QSH
-            </div>
+            <img 
+              src="https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png" 
+              alt="Dentro do QSH" 
+              className="w-10 h-10 object-contain rounded-xl shadow-md border border-slate-100 bg-white" 
+            />
             <div>
-              <h1 className="text-sm font-black tracking-tight text-slate-900 uppercase">Monitor QSH</h1>
+              <h1 className="text-sm font-black tracking-tight text-slate-900 uppercase">Dentro do QSH</h1>
               <div className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">
                 14º BPM • POLÍCIA MILITAR
               </div>
