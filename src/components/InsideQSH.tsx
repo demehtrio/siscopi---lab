@@ -201,7 +201,6 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
     }
   ]);
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -210,12 +209,6 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
   const [customApiKey, setCustomApiKey] = useState(GOOGLE_API_KEY);
   const [isUsingCustomKey, setIsUsingCustomKey] = useState(Boolean(GOOGLE_API_KEY));
   const [googleMapsError, setGoogleMapsError] = useState<string | null>(null);
-
-  // Form states
-  const [quality, setQuality] = useState(3);
-  const [safety, setSafety] = useState(3);
-  const [hygiene, setHygiene] = useState(3);
-  const [note, setNote] = useState('');
 
   // Sync Google Key detection
   useEffect(() => {
@@ -513,43 +506,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
     { name: "QSH 21.2 - Setor Leste", lat: -7.87984, lng: -38.74227 }
   ];
 
-  // Submit QSH Report
-  const handleSubmitReport = async () => {
-    const newReport: Omit<QSHReport, 'id'> = {
-      timestamp: Date.now(),
-      quality,
-      safety,
-      hygiene,
-      coordinates: userLocation,
-      note: note.trim() ? note : undefined,
-      quadrantId: reportQuadrantId,
-      userName: user?.displayName || "Operador PMPE",
-      userEmail: user?.email || ""
-    };
 
-    if (isLocalMode) {
-      const reportWithId = { ...newReport, id: `local-qsh-${Date.now()}` };
-      const updated = [reportWithId, ...reports];
-      setReports(updated);
-      localStorage.setItem('siscopi_qsh_reports', JSON.stringify(updated));
-    } else {
-      try {
-        await addDoc(collection(db, 'qsh_reports'), {
-          ...newReport,
-          timestamp: Date.now()
-        });
-      } catch (err) {
-        console.error("Error creating firebase QSH report:", err);
-      }
-    }
-
-    setIsFormOpen(false);
-    setNote('');
-    setQuality(3);
-    setSafety(3);
-    setHygiene(3);
-    alert("Avaliação QSH registrada com sucesso!");
-  };
 
   const handleSaveGoalsInternal = async () => {
     setGlobalGoals(tempGoals);
@@ -585,19 +542,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
     return reports.filter(r => r.quadrantId === activeQuadrantId);
   }, [reports, activeQuadrantId]);
 
-  const stats = useMemo(() => {
-    if (activeReports.length === 0) return { q: '0', s: '0', h: '0' };
-    const sums = activeReports.reduce((acc, curr) => ({
-      q: acc.q + curr.quality,
-      s: acc.s + curr.safety,
-      h: acc.h + curr.hygiene
-    }), { q: 0, s: 0, h: 0 });
-    return {
-      q: (sums.q / activeReports.length).toFixed(1),
-      s: (sums.s / activeReports.length).toFixed(1),
-      h: (sums.h / activeReports.length).toFixed(1)
-    };
-  }, [activeReports]);
+
 
   const svgPolygonPoints = useMemo(() => {
     return activeQuadrant.coordinates.map(c => {
@@ -770,7 +715,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
               <Target className="size-4 text-rose-600" />
-              <span className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Metas Trimestrais CVLI</span>
+              <span className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Metas do Trimestre</span>
               {isAdmin && !isEditingGoals && (
                 <button 
                   onClick={() => setIsEditingGoals(true)}
@@ -864,7 +809,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
               <TrendingDown className="size-4 text-emerald-600" />
-              <span className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Reduções Propostas CVLI</span>
+              <span className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Comparativo de Redução</span>
               {isAdmin && !isEditingReductions && (
                 <button 
                   onClick={() => setIsEditingReductions(true)}
@@ -899,7 +844,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
 
           <div className="grid grid-cols-2 gap-2 mb-2">
             <div className="bg-white p-2.5 rounded-xl border border-slate-100 text-center">
-              <p className="text-[9px] font-bold text-slate-500 mb-0.5">Ocorrências Ano Anterior</p>
+              <p className="text-[9px] font-bold text-slate-500 mb-0.5">MVI (Ano Anterior)</p>
               {isEditingReductions ? (
                 <input 
                   type="text" 
@@ -913,7 +858,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
             </div>
             
             <div className="bg-white p-2.5 rounded-xl border border-slate-100 text-center">
-              <p className="text-[9px] font-bold text-cyan-600 mb-0.5">Meta para 2026</p>
+              <p className="text-[9px] font-bold text-cyan-600 mb-0.5">NVI (Ano Atual)</p>
               {isEditingReductions ? (
                 <input 
                   type="text" 
@@ -936,43 +881,6 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
             )}
           </div>
         </div>
-
-        {/* Collected metrics list */}
-        <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 mb-3 flex flex-col gap-2">
-          <span className="text-[10px] uppercase font-black text-slate-505 tracking-wider flex items-center gap-1.5 mb-1">
-            <Target className="size-4 text-emerald-600" />
-            Índices Médios Deste Setor
-          </span>
-          <div className="grid grid-cols-3 gap-2 text-center text-xs font-black text-slate-805">
-            <div className="bg-white p-2 rounded-xl border border-slate-100">
-              <span className="text-[9px] font-medium text-slate-500 block mb-0.5">CVLI (Q)</span>
-              <span className="text-sm text-rose-500">{stats.q}</span>
-            </div>
-            <div className="bg-white p-2 rounded-xl border border-slate-100">
-              <span className="text-[9px] font-medium text-slate-500 block mb-0.5">Segur (S)</span>
-              <span className="text-sm text-yellow-500">{stats.s}</span>
-            </div>
-            <div className="bg-white p-2 rounded-xl border border-slate-100">
-              <span className="text-[9px] font-medium text-slate-500 block mb-0.5">Ronda (R)</span>
-              <span className="text-sm text-blue-500">{stats.h}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Submit review action */}
-        {isInsideQuadrant ? (
-          <button
-            onClick={() => setIsFormOpen(true)}
-            className="w-full mt-auto bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-md cursor-pointer text-xs flex items-center justify-center gap-2 transition"
-          >
-            <Compass className="size-4 animate-spin-slow" />
-            Efetuar Avaliação QSH
-          </button>
-        ) : (
-          <div className="mt-auto p-3.5 bg-yellow-50 border border-yellow-100 rounded-xl text-center text-xs font-bold text-yellow-700">
-            ⚠️ Teleporte seu GPS para dentro do setor mapeado para fazer vistorias.
-          </div>
-        )}
 
       </aside>
 
@@ -1359,35 +1267,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
           )}
         </div>
 
-        {/* Floating Toggle Live Satellite Maps Button */}
-        <div className="absolute bottom-5 left-5 pointer-events-auto z-10 flex gap-2">
-          <button
-            onClick={() => setMapMode('simulation')}
-            className={cn(
-              "p-2.5 rounded-xl text-xs font-black uppercase flex items-center gap-1.5 shadow-md",
-              mapMode === 'simulation' ? "bg-blue-900 text-white" : "bg-white text-slate-600 border border-slate-200"
-            )}
-          >
-            <Compass className="size-4 text-blue-500" />
-            Vetor Local
-          </button>
-          <button
-            onClick={() => {
-              if (!isUsingCustomKey) {
-                setIsSettingsOpen(true);
-              } else {
-                setMapMode('google-maps');
-              }
-            }}
-            className={cn(
-              "p-2.5 rounded-xl text-xs font-black uppercase flex items-center gap-1.5 shadow-md",
-              mapMode === 'google-maps' ? "bg-blue-900 text-white" : "bg-white text-slate-600 border border-slate-200"
-            )}
-          >
-            <MapIcon className="size-4 text-emerald-500" />
-            Google Satélite®
-          </button>
-        </div>
+
 
       </main>
 
@@ -1415,133 +1295,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
         </button>
       </div>
 
-      {/* Form Dialog */}
-      <AnimatePresence>
-        {isFormOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsFormOpen(false)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-            />
-            
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative bg-white border border-slate-250 rounded-3xl p-6 shadow-2xl w-full max-w-md text-slate-800 z-10"
-            >
-              <button 
-                onClick={() => setIsFormOpen(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700"
-              >
-                <X className="size-5" />
-              </button>
 
-              <h3 className="text-base font-black text-slate-900 mb-2 flex items-center gap-2 uppercase">
-                <Target className="size-5 text-blue-600" />
-                Registrar Avaliação QSH
-              </h3>
-
-              <div className="space-y-4">
-                
-                {/* 1. Volume CVLI */}
-                <div>
-                  <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Impacto de Criminalidade (CVLI)</label>
-                  <div className="flex items-center gap-1.5">
-                    {[1, 2, 3, 4, 5].map(val => (
-                      <button
-                        key={val}
-                        onClick={() => setQuality(val)}
-                        className={cn(
-                          "flex-1 py-2 rounded-xl text-xs font-black border transition",
-                          quality === val 
-                            ? "bg-rose-50 border-rose-500 text-rose-600 shadow-sm" 
-                            : "bg-white border-slate-200 text-slate-400"
-                        )}
-                      >
-                        {val} {val === 1 ? 'Mín' : val === 5 ? 'Crít' : ''}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 2. Security & Physical Risk */}
-                <div>
-                  <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Instabilidades / Risco perimetral</label>
-                  <div className="flex items-center gap-1.5">
-                    {[1, 2, 3, 4, 5].map(val => (
-                      <button
-                        key={val}
-                        onClick={() => setSafety(val)}
-                        className={cn(
-                          "flex-1 py-2 rounded-xl text-xs font-black border transition",
-                          safety === val 
-                            ? "bg-amber-50 border-amber-500 text-amber-600 shadow-sm" 
-                            : "bg-white border-slate-200 text-slate-400"
-                        )}
-                      >
-                        {val} {val === 1 ? 'Mín' : val === 5 ? 'Crít' : ''}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 3. Patrol / Need */}
-                <div>
-                  <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Necessidade de Recurso Especializ.</label>
-                  <div className="flex items-center gap-1.5">
-                    {[1, 2, 3, 4, 5].map(val => (
-                      <button
-                        key={val}
-                        onClick={() => setHygiene(val)}
-                        className={cn(
-                          "flex-1 py-2 rounded-xl text-xs font-black border transition",
-                          hygiene === val 
-                            ? "bg-blue-50 border-blue-500 text-blue-600 shadow-sm" 
-                            : "bg-white border-slate-200 text-slate-400"
-                        )}
-                      >
-                        {val} {val === 1 ? 'Baixa' : val === 5 ? 'Urg' : ''}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Note Field */}
-                <div>
-                  <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Relatório descritivo da vistoria</label>
-                  <textarea
-                    rows={3}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="E.g. Condições de iluminação precárias na rua principal. Sugerido reforço da ROCAM no local quente."
-                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-
-                <div className="flex gap-2.5 pt-2">
-                  <button
-                    onClick={() => setIsFormOpen(false)}
-                    className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold text-slate-600 transition"
-                  >
-                    Voltar
-                  </button>
-                  <button
-                    onClick={handleSubmitReport}
-                    className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-650 text-white rounded-xl text-xs font-black transition shadow-md"
-                  >
-                    Registrar Vistoria QSH
-                  </button>
-                </div>
-
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Settings Modal (Maps Custom API Config) */}
       <AnimatePresence>
