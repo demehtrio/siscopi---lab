@@ -32,13 +32,15 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && (
-        (request.auth.token.email.lower() == "demetriomarques@gmail.com") ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-        (exists(/databases/$(database)/documents/settings/lists) &&
-         request.auth.token.email.lower() in get(/databases/$(database)/documents/settings/lists).data.adminList)
-      );
+      return isAuthenticated() && 
+             request.auth.token != null && 
+             ('email' in request.auth.token) && (
+               (request.auth.token.email.lower() == "demetriomarques@gmail.com") ||
+               (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+               (exists(/databases/$(database)/documents/settings/lists) &&
+                request.auth.token.email.lower() in get(/databases/$(database)/documents/settings/lists).data.adminList)
+             );
     }
 
     function isAuthorized() {
