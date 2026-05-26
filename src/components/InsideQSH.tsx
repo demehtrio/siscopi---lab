@@ -718,7 +718,10 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
               <span className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Metas do Trimestre</span>
               {isAdmin && !isEditingGoals && (
                 <button 
-                  onClick={() => setIsEditingGoals(true)}
+                  onClick={() => {
+                    setTempGoals(globalGoals);
+                    setIsEditingGoals(true);
+                  }}
                   className="flex items-center gap-1 text-[9px] uppercase font-bold text-rose-700 bg-rose-100 hover:bg-rose-200 px-2 py-0.5 rounded transition shadow-sm ml-1"
                   title="Editar Metas"
                 >
@@ -737,7 +740,10 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
                   Salvar
                 </button>
                 <button 
-                  onClick={() => setIsEditingGoals(false)}
+                  onClick={() => {
+                    setTempGoals(globalGoals);
+                    setIsEditingGoals(false);
+                  }}
                   className="bg-slate-200 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded transition"
                 >
                   Sair
@@ -814,7 +820,10 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
               <span className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Comparativo de Redução</span>
               {isAdmin && !isEditingReductions && (
                 <button 
-                  onClick={() => setIsEditingReductions(true)}
+                  onClick={() => {
+                    setTempReductions(globalReductions);
+                    setIsEditingReductions(true);
+                  }}
                   className="flex items-center gap-1 text-[9px] uppercase font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded transition shadow-sm ml-1"
                   title="Editar Reduções"
                 >
@@ -833,7 +842,10 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
                   Salvar
                 </button>
                 <button 
-                  onClick={() => setIsEditingReductions(false)}
+                  onClick={() => {
+                    setTempReductions(globalReductions);
+                    setIsEditingReductions(false);
+                  }}
                   className="bg-slate-200 text-slate-700 text-[9px] font-bold px-2 py-0.5 rounded transition"
                 >
                   Sair
