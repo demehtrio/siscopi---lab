@@ -552,8 +552,33 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
   }, [bounds, activeQuadrant]);
 
   return (
-    <div className="relative h-[calc(100vh-70px)] md:h-[calc(100vh-100px)] w-full bg-slate-150 overflow-hidden flex flex-col md:flex-row rounded-t-3xl shadow-xl">
+    <div className={cn(
+      "relative h-[calc(100vh-70px)] md:h-[calc(100vh-100px)] w-full bg-slate-150 overflow-hidden flex flex-col md:flex-row rounded-t-3xl shadow-xl transition-all duration-700",
+      !isInsideQuadrant ? "ring-2 ring-amber-500/20 ring-offset-1" : ""
+    )}>
       
+      {/* Alert boundary vignette indicator when outside active quadrant */}
+      <AnimatePresence>
+        {!isInsideQuadrant && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ 
+              opacity: [0.3, 0.6, 0.3],
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 3.5, 
+              repeat: Infinity, 
+              ease: "easeInOut" 
+            }}
+            className="absolute inset-0 pointer-events-none z-30 rounded-t-3xl border border-amber-500/20 shadow-[inset_0_0_60px_rgba(245,158,11,0.22)]"
+            style={{
+              background: 'radial-gradient(circle, transparent 55%, rgba(245, 158, 11, 0.12) 100%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar - Control Deck */}
       <aside className={cn(
         "w-full md:w-[24rem] bg-white border-r border-slate-200 p-5 flex flex-col h-full z-20 overflow-y-auto no-scrollbar shrink-0 shadow-sm",

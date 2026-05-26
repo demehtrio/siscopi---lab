@@ -134,7 +134,7 @@ import { Vehicle, RecordEntry, UserProfile, ChecklistData, AppNotification } fro
 
 // --- Constants ---
 const LOGO_14BPM_URL = ASSETS.LOGO_14BPM;
-const LOGO_SISCOPI_URL = "https://i.pinimg.com/originals/ce/12/87/ce1287b014c24eda81c128d540203fa2.png";
+const LOGO_SISCOPI_URL = "https://i.pinimg.com/originals/02/e2/df/02e2df69d69c98430442a140f46596d9.png";
 const FALLBACK_LOGO = "https://cdn-icons-png.flaticon.com/512/1022/1022330.png";
 
 const removeWhiteBackground = (base64: string): Promise<string> => {
@@ -282,7 +282,7 @@ function SafeImage({ src, alt, className, width, height, icon: IconFallback = Sh
   const [loading, setLoading] = useState(true);
   const proxiedUrl = getProxiedUrl(src, width, height);
 
-  if (!src || error) {
+  if (!src || src.trim() === "" || error) {
     return (
       <div className={`${className} flex items-center justify-center bg-slate-100 text-slate-400 rounded-lg`}>
         <IconFallback size={width ? Math.min(width / 2, 24) : 20} />
@@ -298,7 +298,7 @@ function SafeImage({ src, alt, className, width, height, icon: IconFallback = Sh
         </div>
       )}
       <img
-        src={proxiedUrl || null}
+        src={(proxiedUrl && proxiedUrl.trim() !== "") ? proxiedUrl : null}
         alt={alt}
         className={`max-w-full max-h-full ${loading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300 object-contain`}
         onLoad={() => setLoading(false)}
@@ -7302,8 +7302,8 @@ function ChecklistModule({
                             animate={{ scale: 1, opacity: 1 }}
                             className="relative group aspect-square rounded-[1.5rem] overflow-hidden border border-slate-200 bg-slate-50 shadow-sm"
                           >
-                            {foto ? (
-                              <img src={foto || null} alt={`Foto ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                            {foto && foto.trim() !== "" ? (
+                              <img src={foto} alt={`Foto ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                             ) : null}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             <button
