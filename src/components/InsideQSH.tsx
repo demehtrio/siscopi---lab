@@ -1496,7 +1496,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
 
               <h3 className="text-base font-black text-slate-900 mb-2 flex items-center gap-2">
                 <Info className="size-5 text-blue-650" />
-                Guia Operacional Inside QSH
+                Guia Operacional Dentro do QSH
               </h3>
 
               <div className="space-y-3 text-xs text-slate-600 leading-relaxed max-h-[70vh] overflow-y-auto pr-1">
