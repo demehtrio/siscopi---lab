@@ -134,7 +134,7 @@ import { Vehicle, RecordEntry, UserProfile, ChecklistData, AppNotification } fro
 
 // --- Constants ---
 const LOGO_14BPM_URL = ASSETS.LOGO_14BPM;
-const LOGO_SISCOPI_URL = ASSETS.LOGO_SISCOPI;
+const LOGO_SISCOPI_URL = "https://i.pinimg.com/originals/ce/12/87/ce1287b014c24eda81c128d540203fa2.png";
 const FALLBACK_LOGO = "https://cdn-icons-png.flaticon.com/512/1022/1022330.png";
 
 const removeWhiteBackground = (base64: string): Promise<string> => {
@@ -3834,7 +3834,7 @@ export default function App() {
           <p className="text-slate-400 font-medium mb-2 text-[10px]">Batalhão Cel. PM Manoel de Souza Ferraz</p>
           <div className="max-w-full px-4 mb-8">
             <SafeImage 
-              src={ASSETS.LOGO_SISCOPI} 
+              src={LOGO_SISCOPI_URL} 
               alt="SisCOpI Logo" 
               className="h-10 w-auto max-w-full mx-auto object-contain" 
               height={40}
@@ -4058,7 +4058,7 @@ export default function App() {
                 <span className="font-black text-xl tracking-tighter leading-none">{omeOrigem}</span>
                 <span className="text-[10px] font-bold opacity-80 uppercase tracking-tighter">PMPE</span>
                 <SafeImage 
-                  src={ASSETS.LOGO_SISCOPI} 
+                  src={LOGO_SISCOPI_URL} 
                   alt="SisCOpI Logo" 
                   className="h-4 w-auto mt-0.5 object-contain" 
                   height={16}
@@ -4187,7 +4187,7 @@ export default function App() {
               <span className="font-black text-lg tracking-tighter leading-none">{omeOrigem}</span>
               <span className="text-[9px] font-bold opacity-80 uppercase">PMPE</span>
               <SafeImage 
-                src={ASSETS.LOGO_SISCOPI} 
+                src={LOGO_SISCOPI_URL} 
                 alt="SisCOpI Logo" 
                 className="h-3.5 w-auto mt-0.5 object-contain" 
                 height={14}
@@ -4261,7 +4261,7 @@ export default function App() {
                       <div className="flex items-center justify-center gap-4">
                         <div className="h-px w-12 bg-slate-200"></div>
                         <SafeImage 
-                          src={ASSETS.LOGO_SISCOPI} 
+                          src={LOGO_SISCOPI_URL} 
                           alt="SisCOpI Logo" 
                           className="h-12 w-auto object-contain" 
                           height={48}
