@@ -2575,6 +2575,7 @@ export default function App() {
       setUserRole(null);
       return;
     }
+    if (isLocalMode) return;
     const unsub = onSnapshot(doc(db, 'users', user.uid), (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
@@ -2595,7 +2596,7 @@ export default function App() {
       console.error("Error fetching user role:", error);
     });
     return () => unsub();
-  }, [user]);
+  }, [user, isLocalMode]);
 
   // Admin & Authorization Check Listener
   useEffect(() => {
@@ -2636,6 +2637,7 @@ export default function App() {
   // Settings Listener
   useEffect(() => {
     if (!user) return;
+    if (isLocalMode) return;
 
     const unsub = onSnapshot(doc(db, 'settings', 'lists'), (snapshot) => {
       if (snapshot.exists()) {
@@ -2710,11 +2712,12 @@ export default function App() {
     });
 
     return () => unsub();
-  }, [user, isAdmin]);
+  }, [user, isAdmin, isLocalMode]);
 
   // History Listener
   useEffect(() => {
     if (!user) return;
+    if (isLocalMode) return;
 
     const collections = ['atividades_linha', 'efetivo_viaturas', 'efetivo_mos'];
     const unsubscribes: (() => void)[] = [];
@@ -2751,7 +2754,7 @@ export default function App() {
     });
 
     return () => unsubscribes.forEach(unsub => unsub());
-  }, [user]);
+  }, [user, isLocalMode]);
 
   // Local Storage Mode Handler
   useEffect(() => {
@@ -4090,7 +4093,7 @@ export default function App() {
                 setCadastroVtrSearchTerm('');
                 setCadastroVtrStatusFilter('available');
               }}
-              icon={<img src={ASSETS.ICON_VTR || null} alt="" className="w-5 h-5 object-contain" referrerPolicy="no-referrer" />}
+              icon={<SafeImage src={ASSETS.ICON_VTR} alt="" className="w-5 h-5" width={20} />}
               label="Cadastro VTR"
               badge="NOVO"
             />
@@ -4528,9 +4531,9 @@ export default function App() {
                       title="Checklist VTR"
                       description={`Sistema integrado de conferência de viaturas do ${omeOrigem}.`}
                       color="red"
-                    icon={<img src={ASSETS.ICON_CHECKLIST || null} alt="Checklist" className="w-8 h-8 object-contain opacity-70 group-hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />}
-                    onClick={() => setActiveTab('checklist')}
-                  />
+                      icon={<SafeImage src={ASSETS.ICON_CHECKLIST} alt="Checklist" className="w-8 h-8 opacity-70 group-hover:opacity-100 transition-opacity" width={32} />}
+                      onClick={() => setActiveTab('checklist')}
+                    />
                 </div>
               </motion.div>
             )}
@@ -7545,10 +7548,11 @@ function CadastroVTR({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100">
         <div>
           <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <img 
-              src={ASSETS.ICON_VTR || null} 
+            <SafeImage 
+              src={ASSETS.ICON_VTR} 
               alt="Cadastro VTR Logo" 
-              className="w-10 h-10 object-contain" 
+              className="w-10 h-10" 
+              width={40}
             />
             Cadastro VTR <span className="text-blue-600/20">|</span> <span className="text-slate-400 text-lg font-bold">Controle de Frota</span>
           </h2>

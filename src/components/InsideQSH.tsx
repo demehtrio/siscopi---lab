@@ -957,6 +957,30 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
                   disableDefaultUI={true}
                   internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
                   style={{ width: '100%', height: '100%' }}
+                  onClick={(ev: any) => {
+                    let lat: number | undefined;
+                    let lng: number | undefined;
+                    
+                    if (ev.detail && ev.detail.latLng) {
+                      lat = typeof ev.detail.latLng.lat === 'function' ? ev.detail.latLng.lat() : ev.detail.latLng.lat;
+                      lng = typeof ev.detail.latLng.lng === 'function' ? ev.detail.latLng.lng() : ev.detail.latLng.lng;
+                    } else if (ev.latLng) {
+                      lat = typeof ev.latLng.lat === 'function' ? ev.latLng.lat() : ev.latLng.lat;
+                      lng = typeof ev.latLng.lng === 'function' ? ev.latLng.lng() : ev.latLng.lng;
+                    }
+
+                    if (typeof lat === 'number' && typeof lng === 'number') {
+                      const formattedLatLng = {
+                        lat: parseFloat(lat.toFixed(5)),
+                        lng: parseFloat(lng.toFixed(5))
+                      };
+                      if (isDrawingMode) {
+                        setDrawingCoordinates(prev => [...prev, formattedLatLng]);
+                      } else {
+                        setUserLocation(formattedLatLng);
+                      }
+                    }
+                  }}
                 >
                   <PolygonLayer coordinates={activeQuadrant.coordinates} />
                   
