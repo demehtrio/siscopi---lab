@@ -4475,21 +4475,12 @@ export default function App() {
                 </section>
 
                 <footer className="mt-16 py-8 border-t border-slate-100 flex flex-col items-center justify-center gap-4 text-center">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full border border-slate-100 mb-2">
-                    <Truck size={14} className="text-blue-600" />
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Acesso Rápido</span>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      setActiveTab('cadastro_vtr');
-                      setCadastroVtrSearchTerm('');
-                      setCadastroVtrStatusFilter('available');
-                    }}
-                    className="text-blue-600 font-bold hover:underline flex items-center gap-2"
-                  >
-                    Ir para Cadastro VTR
-                    <ChevronRight size={16} />
-                  </button>
+                  <img 
+                    src="https://i.pinimg.com/originals/ec/9f/d5/ec9fd56888b3aaf55a1582e31a7fe186.png" 
+                    alt="Logo PMPE" 
+                    className="h-16 w-auto object-contain"
+                    referrerPolicy="no-referrer"
+                  />
                   <p className="text-slate-400 text-xs font-medium">14º Batalhão de Polícia Militar • SisCOpI</p>
                 </footer>
               </motion.div>
