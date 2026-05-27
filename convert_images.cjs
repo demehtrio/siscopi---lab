@@ -5,7 +5,7 @@ const path = require('path');
 
 const urls = {
   LOGO_14BPM: "https://i.pinimg.com/originals/28/33/bd/2833bdc504f4fc4f3cb3c2817a664fc9.png",
-  LOGO_SISCOPI: "https://i.pinimg.com/originals/87/a3/ed/87a3ed9f8a7288c126367864ac2a7663.png",
+  LOGO_SISCOPI: "https://i.pinimg.com/originals/37/c0/21/37c02181d20fc225a7e7f31597780a8d.png",
   ICON_VTR: "https://i.pinimg.com/originals/a4/9d/1b/a49d1bc945d9d701a572668f6ffc99b8.png",
   ICON_CHECKLIST: "https://i.pinimg.com/originals/44/e4/8c/44e48c5ff461edb7623bab64bd898d8d.png",
   LOGO_PMPE: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Bras%C3%A3o_da_PMPE.svg/1200px-Bras%C3%A3o_da_PMPE.svg.png"
