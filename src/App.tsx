@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+declare const __APP_VERSION__: string;
+declare const __BUILD_DATE__: string;
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   auth, 
@@ -3897,7 +3900,7 @@ export default function App() {
             Polícia Militar de Pernambuco
           </p>
           <p className="mt-2 text-[10px] text-slate-400 font-bold">
-            Versão 3.16
+            Versão {__APP_VERSION__} ({__BUILD_DATE__})
           </p>
         </motion.div>
       </div>
@@ -4147,7 +4150,7 @@ export default function App() {
               Sair
             </button>
             <div className="text-center mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-              Versão 3.16
+              Versão {__APP_VERSION__} ({__BUILD_DATE__})
             </div>
           </div>
         </aside>

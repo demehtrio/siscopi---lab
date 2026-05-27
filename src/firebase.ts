@@ -1,12 +1,7 @@
 /// <reference types="vite/client" />
 import { initializeApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { 
-  initializeFirestore, 
-  persistentLocalCache, 
-  persistentMultipleTabManager,
-  getFirestore
-} from 'firebase/firestore';
+import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
@@ -17,20 +12,21 @@ setPersistence(auth, browserLocalPersistence).catch((err) => {
   console.error("Error setting Auth persistence:", err);
 });
 
-// Initialize Firestore with persistent local cache for offline access and performance.
-// We fallback to getFirestore if browser restrictions (like sandboxed iframes) prevent IndexedDB access.
-let db;
-try {
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager()
-    })
-  }, firebaseConfig.firestoreDatabaseId);
-} catch (err) {
-  console.warn("Firestore persistent local cache failed to initialize (this is expected in some sandboxed iframes). Falling back to standard/memory-cache Firestore configuration:", err);
-  db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-}
+// Initialize Firestore using standard getFirestore, which automatically
+// handles the best caching strategy depending on the environment (memory/IndexedDB)
+// and works seamlessly in sandboxed preview iframes.
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 
-export { db };
+// Test connection on boot as requested by Firebase skill guidelines
+async function testConnection() {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && (error.message.includes('the client is offline') || error.message.toLowerCase().includes('offline'))) {
+      console.error("Please check your Firebase configuration. The client is offline.");
+    }
+  }
+}
+testConnection();
 
 
