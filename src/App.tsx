@@ -3896,12 +3896,20 @@ export default function App() {
             </button>
           </div>
 
-          <p className="mt-8 text-[10px] text-slate-400 uppercase tracking-widest font-bold">
-            Polícia Militar de Pernambuco
-          </p>
-          <p className="mt-2 text-[10px] text-slate-400 font-bold">
-            Versão {__APP_VERSION__} ({__BUILD_DATE__})
-          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-2">
+            <img 
+              src="https://i.pinimg.com/originals/ec/9f/d5/ec9fd56888b3aaf55a1582e31a7fe186.png" 
+              alt="Logo PMPE" 
+              className="h-16 w-auto object-contain"
+              referrerPolicy="no-referrer"
+            />
+            <p className="mt-2 text-[10px] text-slate-400 uppercase tracking-widest font-bold">
+              Polícia Militar de Pernambuco
+            </p>
+            <p className="text-[10px] text-slate-400 font-bold">
+              Versão {__APP_VERSION__} ({__BUILD_DATE__})
+            </p>
+          </div>
         </motion.div>
       </div>
     );
