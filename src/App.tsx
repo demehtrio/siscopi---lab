@@ -784,7 +784,7 @@ export default function App() {
       const historyData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setStandaloneHistory(historyData);
     }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'standalone_checklists');
+      console.warn("Offline or Firestore subscription info: Error fetching standalone checklists:", error);
     });
     return () => unsubscribe();
   }, [user, isAdmin]);
@@ -2708,7 +2708,8 @@ export default function App() {
         ).finally(() => setSettingsLoaded(true));
       }
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'settings/lists', 'Monitoramento de configurações');
+      console.warn("Offline or Firestore subscription info: Error loading settings lists:", error);
+      setSettingsLoaded(true);
     });
 
     return () => unsub();
@@ -2748,7 +2749,7 @@ export default function App() {
           return combined;
         });
       }, (error) => {
-        handleFirestoreError(error, OperationType.LIST, collName, 'Monitoramento do histórico de atividades');
+        console.warn(`Offline or Firestore subscription info: Error monitoring history for ${collName}:`, error);
       });
       unsubscribes.push(unsub);
     });
