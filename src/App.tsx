@@ -3896,6 +3896,9 @@ export default function App() {
           <p className="mt-8 text-[10px] text-slate-400 uppercase tracking-widest font-bold">
             Polícia Militar de Pernambuco
           </p>
+          <p className="mt-2 text-[10px] text-slate-400 font-bold">
+            Versão 3.16
+          </p>
         </motion.div>
       </div>
     );
@@ -4143,6 +4146,9 @@ export default function App() {
               <LogOut size={20} />
               Sair
             </button>
+            <div className="text-center mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              Versão 3.16
+            </div>
           </div>
         </aside>
 
