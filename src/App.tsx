@@ -3857,14 +3857,7 @@ export default function App() {
             {loginLoading ? "Acessando..." : "Entrar com Google"}
           </button>
 
-          <button 
-            onClick={handleLocalLogin}
-            disabled={loginLoading}
-            className="mt-4 w-full flex items-center justify-center gap-3 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-950 transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            <Sparkles size={18} className="text-yellow-400 fill-yellow-400 animate-pulse" />
-            Tentar Modo Local (Sem Firebase)
-          </button>
+
 
           {authError && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-2xl flex items-start gap-3">
@@ -4133,7 +4126,7 @@ export default function App() {
           <div className="mt-auto pt-6 border-t border-slate-100">
             <div className="flex items-center gap-3 mb-4">
               <img 
-                src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`} 
+                src={(user.photoURL && user.photoURL.trim() !== "") ? user.photoURL : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`} 
                 alt={user.displayName || ""} 
                 className="w-10 h-10 rounded-full border border-slate-200" 
                 onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`; }}
@@ -4208,7 +4201,7 @@ export default function App() {
               )}
             </button>
             <img 
-              src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`} 
+              src={(user.photoURL && user.photoURL.trim() !== "") ? user.photoURL : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`} 
               alt="" 
               className="w-8 h-8 rounded-full border-2 border-white/20" 
               onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`; }}
