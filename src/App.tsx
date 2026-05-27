@@ -3898,7 +3898,7 @@ export default function App() {
 
           <div className="mt-8 flex flex-col items-center justify-center gap-2">
             <img 
-              src="https://i.pinimg.com/originals/ec/9f/d5/ec9fd56888b3aaf55a1582e31a7fe186.png" 
+              src="https://i.pinimg.com/originals/35/a9/da/35a9da586d140eeb8273d5270c4e4963.png" 
               alt="Logo PMPE" 
               className="h-16 w-auto object-contain"
               referrerPolicy="no-referrer"
@@ -4484,7 +4484,7 @@ export default function App() {
 
                 <footer className="mt-16 py-8 border-t border-slate-100 flex flex-col items-center justify-center gap-4 text-center">
                   <img 
-                    src="https://i.pinimg.com/originals/ec/9f/d5/ec9fd56888b3aaf55a1582e31a7fe186.png" 
+                    src="https://i.pinimg.com/originals/35/a9/da/35a9da586d140eeb8273d5270c4e4963.png" 
                     alt="Logo PMPE" 
                     className="h-16 w-auto object-contain"
                     referrerPolicy="no-referrer"
