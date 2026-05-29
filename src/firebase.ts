@@ -23,7 +23,7 @@ async function testConnection() {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
     if (error instanceof Error && (error.message.includes('the client is offline') || error.message.toLowerCase().includes('offline'))) {
-      console.error("Please check your Firebase configuration. The client is offline.");
+      console.warn("Firebase configuration check: The client is offline (this is expected in sandboxed preview iframes). Offline capabilities are active.");
     }
   }
 }

@@ -3907,7 +3907,7 @@ export default function App() {
               Polícia Militar de Pernambuco
             </p>
             <p className="text-[10px] text-slate-400 font-bold">
-              Versão {__APP_VERSION__} ({__BUILD_DATE__})
+              Versão {__APP_VERSION__}
             </p>
           </div>
         </motion.div>
@@ -4158,7 +4158,7 @@ export default function App() {
               Sair
             </button>
             <div className="text-center mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-              Versão {__APP_VERSION__} ({__BUILD_DATE__})
+              Versão {__APP_VERSION__}
             </div>
           </div>
         </aside>
