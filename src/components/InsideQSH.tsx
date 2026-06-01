@@ -116,9 +116,328 @@ function PolygonLayer({ coordinates, color = "#3b82f6" }: { coordinates: { lat: 
   return null;
 }
 
+// Interactive Free Leaflet Map component using standard CDN elements so it works without keys
+function LeafletMap({ 
+  userLocation, 
+  setUserLocation, 
+  activeQuadrant, 
+  activeReports, 
+  isDrawingMode, 
+  drawingCoordinates, 
+  setDrawingCoordinates 
+}: {
+  userLocation: { lat: number, lng: number };
+  setUserLocation: (loc: { lat: number, lng: number }) => void;
+  activeQuadrant: Quadrant;
+  activeReports: QSHReport[];
+  isDrawingMode: boolean;
+  drawingCoordinates: { lat: number, lng: number }[];
+  setDrawingCoordinates: React.Dispatch<React.SetStateAction<{ lat: number, lng: number }[]>>;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const polygonRef = useRef<any>(null);
+  const userMarkerRef = useRef<any>(null);
+  const reportMarkersRef = useRef<any[]>([]);
+  const drawingPolygonRef = useRef<any>(null);
+  const drawingMarkersRef = useRef<any[]>([]);
+  const [leafletLoaded, setLeafletLoaded] = useState(false);
+  const [tileType, setTileType] = useState<'streets' | 'satellite'>('streets'); // streets or satellite!
+
+  // Load Leaflet dynamically
+  useEffect(() => {
+    if ((window as any).L) {
+      setLeafletLoaded(true);
+      return;
+    }
+
+    // Load CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+
+    // Load JS
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.async = true;
+    script.onload = () => {
+      setLeafletLoaded(true);
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  // Initialize Map
+  useEffect(() => {
+    if (!leafletLoaded || !containerRef.current) return;
+    const L = (window as any).L;
+    if (!L) return;
+
+    // Create Map
+    const map = L.map(containerRef.current, {
+      center: [userLocation.lat, userLocation.lng],
+      zoom: 14,
+      zoomControl: true,
+      attributionControl: false
+    });
+
+    mapRef.current = map;
+
+    // Click handler to teleport user or add drawing node
+    map.on('click', (e: any) => {
+      const clickLat = e.latlng.lat;
+      const clickLng = e.latlng.lng;
+      
+      const formattedLatLng = {
+        lat: parseFloat(clickLat.toFixed(5)),
+        lng: parseFloat(clickLng.toFixed(5))
+      };
+
+      if (isDrawingMode) {
+        setDrawingCoordinates((prev: any) => [...prev, formattedLatLng]);
+      } else {
+        setUserLocation(formattedLatLng);
+      }
+    });
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [leafletLoaded]);
+
+  // Handle Tile Type changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !leafletLoaded) return;
+    const L = (window as any).L;
+    if (!L) return;
+
+    // Clear old tile layers
+    map.eachLayer((layer: any) => {
+      if (layer instanceof L.TileLayer) {
+        map.removeLayer(layer);
+      }
+    });
+
+    if (tileType === 'streets') {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+      }).addTo(map);
+    } else {
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+      }).addTo(map);
+    }
+  }, [tileType, leafletLoaded]);
+
+  // Adjust view when quadrant changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !activeQuadrant.coordinates || activeQuadrant.coordinates.length === 0) return;
+    const L = (window as any).L;
+    if (!L) return;
+
+    const bounds = L.latLngBounds(activeQuadrant.coordinates.map(c => [c.lat, c.lng]));
+    map.fitBounds(bounds, { padding: [30, 30] });
+  }, [activeQuadrant, leafletLoaded]);
+
+  // Sync zoom/pan on userLocation change (smooth panning when location shifts)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.panTo([userLocation.lat, userLocation.lng]);
+  }, [userLocation]);
+
+  // Sync the Quadrant Polygon
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !leafletLoaded) return;
+    const L = (window as any).L;
+    if (!L) return;
+
+    if (polygonRef.current) {
+      polygonRef.current.remove();
+    }
+
+    if (activeQuadrant.coordinates && activeQuadrant.coordinates.length >= 3) {
+      polygonRef.current = L.polygon(
+        activeQuadrant.coordinates.map(c => [c.lat, c.lng]),
+        {
+          color: '#2563eb',
+          weight: 3,
+          fillColor: '#2563eb',
+          fillOpacity: 0.15,
+          dashArray: '5, 5'
+        }
+      ).addTo(map);
+    }
+  }, [activeQuadrant, leafletLoaded]);
+
+  // Draw Mode representation
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !leafletLoaded) return;
+    const L = (window as any).L;
+    if (!L) return;
+
+    // Clear old things
+    if (drawingPolygonRef.current) drawingPolygonRef.current.remove();
+    drawingMarkersRef.current.forEach(m => m.remove());
+    drawingMarkersRef.current = [];
+
+    // Add polygon if >= 3
+    if (isDrawingMode && drawingCoordinates.length >= 3) {
+      drawingPolygonRef.current = L.polygon(
+        drawingCoordinates.map(c => [c.lat, c.lng]),
+        {
+          color: '#eab308',
+          weight: 2,
+          fillColor: '#eab308',
+          fillOpacity: 0.2,
+          dashArray: '3, 3'
+        }
+      ).addTo(map);
+    } else if (isDrawingMode && drawingCoordinates.length > 1) {
+      drawingPolygonRef.current = L.polyline(
+        drawingCoordinates.map(c => [c.lat, c.lng]),
+        {
+          color: '#eab308',
+          weight: 2,
+          dashArray: '3, 3'
+        }
+      ).addTo(map);
+    }
+
+    // Add markers for drawn vertexes
+    if (isDrawingMode) {
+      drawingCoordinates.forEach((coord, idx) => {
+        const marker = L.circleMarker([coord.lat, coord.lng], {
+          radius: 6,
+          fillColor: '#eab308',
+          color: '#ca8a04',
+          weight: 2,
+          fillOpacity: 0.8
+        }).addTo(map);
+        marker.bindTooltip(`Ponto ${idx + 1}`, { permanent: true, direction: 'right' });
+        drawingMarkersRef.current.push(marker);
+      });
+    }
+  }, [drawingCoordinates, isDrawingMode, leafletLoaded]);
+
+  // Sync user marker
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !leafletLoaded) return;
+    const L = (window as any).L;
+    if (!L) return;
+
+    if (userMarkerRef.current) {
+      userMarkerRef.current.remove();
+    }
+
+    // Create a beautifully custom pulse icon
+    const customIcon = L.divIcon({
+      className: 'leaflet-user-marker',
+      html: `
+        <div class="relative flex items-center justify-center font-sans">
+          <div class="absolute animate-ping bg-blue-500 w-8 h-8 rounded-full opacity-60"></div>
+          <div class="bg-blue-600 border-2 border-white w-4 h-4 rounded-full shadow-lg"></div>
+        </div>
+      `,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
+    });
+
+    userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], { icon: customIcon }).addTo(map);
+    userMarkerRef.current.bindTooltip("Você (VTR Patrulha)", { permanent: false, direction: 'top' });
+  }, [userLocation, leafletLoaded]);
+
+  // Sync reports
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !leafletLoaded) return;
+    const L = (window as any).L;
+    if (!L) return;
+
+    // Clear old report markers
+    reportMarkersRef.current.forEach(m => m.remove());
+    reportMarkersRef.current = [];
+
+    activeReports.forEach((report) => {
+      const avgRating = (report.quality + report.safety + report.hygiene) / 3;
+      const ratingColor = avgRating >= 4 ? "#10b981" : (avgRating >= 3 ? "#f59e0b" : "#ef4444");
+      
+      const pinIcon = L.divIcon({
+        className: 'leaflet-report-marker',
+        html: `
+          <div class="flex items-center justify-center font-sans">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-md relative group" style="background-color: ${ratingColor}; opacity: 0.9;">
+              <span class="text-[9px] text-white font-black">!</span>
+            </div>
+          </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      const marker = L.marker([report.coordinates.lat, report.coordinates.lng], { icon: pinIcon }).addTo(map);
+      marker.bindPopup(`
+        <div class="p-1 font-sans text-xs">
+          <h4 class="font-bold text-slate-800 uppercase text-[10px] mb-1">RND #${report.id.substring(0, 4).toUpperCase()}</h4>
+          <p class="text-slate-600 leading-tight mb-2">${report.note || 'Sem anotações.'}</p>
+          <div class="grid grid-cols-3 gap-1 text-[9px] text-center font-bold">
+            <div class="bg-emerald-50 text-emerald-700 py-0.5 rounded">CVLI: ${report.quality}/5</div>
+            <div class="bg-blue-50 text-blue-700 py-0.5 rounded">Seg: ${report.safety}/5</div>
+            <div class="bg-amber-50 text-amber-700 py-0.5 rounded">Rond: ${report.hygiene}/5</div>
+          </div>
+        </div>
+      `);
+      reportMarkersRef.current.push(marker);
+    });
+  }, [activeReports, leafletLoaded]);
+
+  return (
+    <div className="absolute inset-0 z-0 bg-slate-100 flex flex-col font-sans">
+      {/* Tile Switch Selector */}
+      <div className="absolute top-4 left-4 z-[1000] flex gap-1 bg-white/95 backdrop-blur border border-slate-200 p-1 rounded-xl shadow-lg pointer-events-auto">
+        <button
+          onClick={() => setTileType('streets')}
+          className={`px-3 py-1.5 text-[10.5px] font-black uppercase rounded-lg transition-all ${
+            tileType === 'streets'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          Mapa / Ruas
+        </button>
+        <button
+          onClick={() => setTileType('satellite')}
+          className={`px-3 py-1.5 text-[10.5px] font-black uppercase rounded-lg transition-all ${
+            tileType === 'satellite'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          Satélite
+        </button>
+      </div>
+
+      {leafletLoaded ? (
+        <div ref={containerRef} className="w-full h-full" style={{ outline: 'none' }} />
+      ) : (
+        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 relative z-10">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-3" />
+          <div className="text-xs text-slate-500 font-bold uppercase tracking-wider font-sans">Carregando Mapa Interativo...</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHProps) {
-  // App Modes: 'simulation' or 'google-maps'
-  const [mapMode, setMapMode] = useState<'simulation' | 'google-maps'>('simulation');
+  // App Modes: 'interactive-map' | 'simulation' | 'google-maps'
+  const [mapMode, setMapMode] = useState<'interactive-map' | 'simulation' | 'google-maps'>('interactive-map');
   
   // Quadrants Management State
   const [quadrants, setQuadrants] = useState<Quadrant[]>([
@@ -931,6 +1250,19 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
         mobileTab === 'map' ? "h-full flex" : "hidden md:flex"
       )}>
         
+        {/* Interactive Free Leaflet Map Wrapper */}
+        {mapMode === 'interactive-map' && (
+          <LeafletMap 
+            userLocation={userLocation}
+            setUserLocation={setUserLocation}
+            activeQuadrant={activeQuadrant}
+            activeReports={activeReports}
+            isDrawingMode={isDrawingMode}
+            drawingCoordinates={drawingCoordinates}
+            setDrawingCoordinates={setDrawingCoordinates}
+          />
+        )}
+
         {/* Real Google Maps Wrapper */}
         {mapMode === 'google-maps' && (
           <div className="absolute inset-0 z-0 bg-slate-200">
@@ -942,17 +1274,17 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
                   {googleMapsError}
                 </p>
                 <p className="text-xs text-slate-500 max-w-xs mb-6">
-                  Para mapeamento satélite nativo do Google, forneça uma chave com faturamento habilitado. Caso contrário utilize o nosso <strong>Vetor de Simulação local</strong>.
+                  Para mapeamento satélite nativo do Google, forneça uma chave com faturamento habilitado. Caso contrário utilize o nosso <strong>Mapa Interativo Gratuito</strong> ou o Vetor de Simulação local.
                 </p>
                 <div className="flex flex-col gap-2.5 w-full max-w-xs">
                   <button 
                     onClick={() => {
                       setGoogleMapsError(null);
-                      setMapMode('simulation');
+                      setMapMode('interactive-map');
                     }} 
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black uppercase py-2.5 rounded-xl transition text-[10px]"
                   >
-                    Usar Simulação Tática Local
+                    Usar Mapa Interativo Gratuito (Recomendado)
                   </button>
                   <button 
                     onClick={() => {
@@ -1389,55 +1721,92 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
 
               <h3 className="text-base font-black text-slate-950 mb-2 flex items-center gap-2 uppercase">
                 <Settings className="size-5 text-blue-650" />
-                Configurar Google Maps® API
+                Configuração de Visualização do Mapa
               </h3>
               
               <p className="text-xs text-slate-500 mb-4 leading-relaxed font-semibold">
-                Insira uma chave do Google Maps Platform habilitada para liberar as camadas de satélite geo-posicionadas reais.
+                Escolha o modo de visualização ideal para o QSH. O Mapa Interativo é gratuito e totalmente operacional.
               </p>
 
-              <div className="space-y-4">
+              <div className="space-y-4 font-sans">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Chave Google Maps</label>
-                  <input 
-                    type="password"
-                    value={customApiKey}
-                    onChange={(e) => setCustomApiKey(e.target.value)}
-                    placeholder="Insira sua chave de Mapa..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-mono text-slate-800 focus:outline-none"
-                  />
+                  <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1.5">Modo de Mapa</label>
+                  <div className="grid grid-cols-3 gap-1.5 font-sans">
+                    <button
+                      type="button"
+                      onClick={() => setMapMode('interactive-map')}
+                      className={cn(
+                        "py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase border transition",
+                        mapMode === 'interactive-map'
+                          ? "bg-blue-50 border-blue-400 text-blue-700"
+                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                      )}
+                    >
+                      🗺️ Real Grátis
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMapMode('simulation')}
+                      className={cn(
+                        "py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase border transition",
+                        mapMode === 'simulation'
+                          ? "bg-blue-50 border-blue-400 text-blue-700"
+                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                      )}
+                    >
+                      📈 Vetor Local
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMapMode('google-maps')}
+                      className={cn(
+                        "py-2 px-1 text-center rounded-xl text-[10px] font-black uppercase border transition",
+                        mapMode === 'google-maps'
+                          ? "bg-blue-50 border-blue-400 text-blue-700"
+                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                      )}
+                    >
+                      🛰️ Google Maps
+                    </button>
+                  </div>
                 </div>
 
+                {mapMode === 'google-maps' && (
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Chave Google Maps</label>
+                    <input 
+                      type="password"
+                      value={customApiKey}
+                      onChange={(e) => setCustomApiKey(e.target.value)}
+                      placeholder="Insira sua chave de Mapa..."
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-mono text-slate-800 focus:outline-none"
+                    />
+                  </div>
+                )}
+
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px] text-slate-500 space-y-1">
-                  <p className="text-blue-600 font-bold mb-1">Importante:</p>
-                  <p>A chave deve ter permissões para Maps JavaScript API.</p>
+                  <p className="text-blue-600 font-bold mb-1">Dica Operacional:</p>
+                  <p>O <strong>Mapa Real Grátis</strong> (OpenStreetMap) oferece ruas e satélite de alta qualidade gratuitamente!</p>
                 </div>
 
                 <div className="flex gap-2.5 pt-2">
                   <button
                     onClick={() => {
-                      setIsUsingCustomKey(false);
-                      setIsSettingsOpen(false);
-                      setMapMode('simulation');
-                    }}
-                    className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold text-slate-500"
-                  >
-                    Usar Apenas Vetor Local
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (customApiKey.trim()) {
-                        setGoogleMapsError(null);
-                        setIsUsingCustomKey(true);
-                        setIsSettingsOpen(false);
-                        setMapMode('google-maps');
+                      if (mapMode === 'google-maps') {
+                        if (customApiKey.trim()) {
+                          setGoogleMapsError(null);
+                          setIsUsingCustomKey(true);
+                          setIsSettingsOpen(false);
+                        } else {
+                          alert("Por favor, insira uma chave válida do Google Maps.");
+                        }
                       } else {
-                        alert("Por favor insira uma chave.");
+                        setIsSettingsOpen(false);
                       }
                     }}
-                    className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 rounded-xl text-xs font-bold text-white shadow-md"
+                    className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold font-sans shadow transition"
                   >
-                    Salvar & Ativar Chave
+                    Confirmar Seleção
                   </button>
                 </div>
               </div>
