@@ -522,6 +522,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
 
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSyncingLocation, setIsSyncingLocation] = useState(false);
 
   // Custom API Key from env if any
   const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_PLATFORM_KEY || '';
@@ -784,24 +785,40 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
 
   const handleSyncRealLocation = () => {
     if ("geolocation" in navigator) {
+      setIsSyncingLocation(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          setIsSyncingLocation(false);
           const loc = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
           setUserLocation(loc);
-          if (loc.lat > 0 || loc.lng > -10) {
-            if (confirm(`Detectamos que você está fora da região PE correspondente. Gostaria de focar no quadrante ativo?`)) {
+          
+          // Check if coordinates look outside SDS/PE region (Brazil, Pernambuco is broadly S and W coords)
+          const isPeRegion = loc.lat < -1 && loc.lat > -11 && loc.lng < -32 && loc.lng > -45;
+          if (!isPeRegion) {
+            if (confirm(`Detectamos que sua geolocalização real (${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}) está fora do setor de atuação da SDS-PE. Deseja retornar ao ponto operacional de patrulha do quadrante atual?`)) {
               setUserLocation(activeQuadrant.coordinates[0]);
             }
           }
         },
-        () => {
-          alert("Não foi possível obter geolocalização nativa.");
+        (error) => {
+          setIsSyncingLocation(false);
+          let errMsg = "Não foi possível obter geolocalização nativa.";
+          if (error.code === error.PERMISSION_DENIED) {
+            errMsg = "Permissão de geolocalização negada. Por favor, libere o acesso ao GPS nas configurações do navegador/dispositivo.";
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            errMsg = "Informações de localização indisponíveis no momento.";
+          } else if (error.code === error.TIMEOUT) {
+            errMsg = "Tempo limite excedido ao tentar recuperar localização GPS.";
+          }
+          alert(errMsg);
         },
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
       );
+    } else {
+      alert("Seu navegador não oferece suporte a Geolocalização.");
     }
   };
 
@@ -1051,6 +1068,22 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
                 </button>
               </div>
             )}
+
+            {/* GPS Synchronization Button in Sidebar */}
+            <button
+              type="button"
+              onClick={handleSyncRealLocation}
+              disabled={isSyncingLocation}
+              className={cn(
+                "w-full mt-2 py-2 px-3 rounded-xl text-[10.5px] font-black uppercase tracking-wider flex items-center justify-center gap-2 border transition duration-200 cursor-pointer shadow-sm active:scale-[0.98]",
+                isSyncingLocation
+                  ? "bg-amber-50 border-amber-200 text-amber-700 animate-pulse"
+                  : "bg-blue-600 border-blue-600 hover:bg-blue-700 text-white"
+              )}
+            >
+              <Navigation className={cn("size-3.5", isSyncingLocation ? "animate-spin text-amber-600" : "text-white")} />
+              <span>{isSyncingLocation ? "Sincronizando GPS..." : "Sincronizar GPS Real"}</span>
+            </button>
           </div>
         </div>
 
@@ -1647,7 +1680,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
         )}
 
         {/* Global Floating Status HUD Overlay */}
-        <div className="absolute top-4 right-4 pointer-events-auto z-10 flex flex-col gap-2">
+        <div className="absolute top-4 right-4 pointer-events-auto z-10 flex flex-col gap-2 items-end">
           {isInsideQuadrant ? (
             <div className="bg-emerald-600 text-white py-2 px-3.5 rounded-xl flex items-center gap-2 shadow-lg text-xs font-bold">
               <span className="relative flex h-2 w-2">
@@ -1657,11 +1690,26 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
               <span>Área Ativa: {activeQuadrant.name.split(' (')[0]}</span>
             </div>
           ) : (
-            <div className="bg-amber-500 text-white py-2 px-3.5 rounded-xl flex items-center gap-2 shadow-lg text-xs font-bold">
+            <div className="bg-amber-500 text-white py-2 px-3.5 rounded-xl flex items-center gap-2 shadow-lg text-xs font-bold font-sans">
               <AlertTriangle className="size-3.5" />
               <span>Fora de Cobertura QSH</span>
             </div>
           )}
+
+          {/* Quick GPS sync floating button */}
+          <button
+            type="button"
+            onClick={handleSyncRealLocation}
+            disabled={isSyncingLocation}
+            className={cn(
+              "py-2 px-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border bg-white border-slate-200 text-slate-800 shadow-md transition-all active:scale-95 duration-250 cursor-pointer hover:bg-slate-50",
+              isSyncingLocation && "bg-amber-50 border-amber-250 text-amber-800 animate-pulse"
+            )}
+            title="Atualizar para minha Localização GPS Real"
+          >
+            <Navigation className={cn("size-3 text-blue-600", isSyncingLocation && "animate-spin text-amber-600")} />
+            <span>{isSyncingLocation ? "Atualizando..." : "Sincronizar GPS"}</span>
+          </button>
         </div>
 
 
