@@ -142,7 +142,6 @@ function LeafletMap({
   const drawingPolygonRef = useRef<any>(null);
   const drawingMarkersRef = useRef<any[]>([]);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
-  const [tileType, setTileType] = useState<'streets' | 'satellite'>('streets'); // streets or satellite!
 
   // Load Leaflet dynamically
   useEffect(() => {
@@ -206,7 +205,7 @@ function LeafletMap({
     };
   }, [leafletLoaded]);
 
-  // Handle Tile Type changes
+  // Handle Tile Layer initialization
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !leafletLoaded) return;
@@ -220,16 +219,10 @@ function LeafletMap({
       }
     });
 
-    if (tileType === 'streets') {
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-      }).addTo(map);
-    } else {
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 19,
-      }).addTo(map);
-    }
-  }, [tileType, leafletLoaded]);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+    }).addTo(map);
+  }, [leafletLoaded]);
 
   // Adjust view when quadrant changes
   useEffect(() => {
@@ -399,30 +392,6 @@ function LeafletMap({
 
   return (
     <div className="absolute inset-0 z-0 bg-slate-100 flex flex-col font-sans">
-      {/* Tile Switch Selector */}
-      <div className="absolute top-4 left-4 z-[1000] flex gap-1 bg-white/95 backdrop-blur border border-slate-200 p-1 rounded-xl shadow-lg pointer-events-auto">
-        <button
-          onClick={() => setTileType('streets')}
-          className={`px-3 py-1.5 text-[10.5px] font-black uppercase rounded-lg transition-all ${
-            tileType === 'streets'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          Mapa / Ruas
-        </button>
-        <button
-          onClick={() => setTileType('satellite')}
-          className={`px-3 py-1.5 text-[10.5px] font-black uppercase rounded-lg transition-all ${
-            tileType === 'satellite'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          Satélite
-        </button>
-      </div>
-
       {leafletLoaded ? (
         <div ref={containerRef} className="w-full h-full" style={{ outline: 'none' }} />
       ) : (
@@ -1834,7 +1803,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
 
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px] text-slate-500 space-y-1">
                   <p className="text-blue-600 font-bold mb-1">Dica Operacional:</p>
-                  <p>O <strong>Mapa Real Grátis</strong> (OpenStreetMap) oferece ruas e satélite de alta qualidade gratuitamente!</p>
+                  <p>O <strong>Mapa Real Grátis</strong> (OpenStreetMap) oferece ruas de alta qualidade e cobertura de navegação gratuitamente!</p>
                 </div>
 
                 <div className="flex gap-2.5 pt-2">
