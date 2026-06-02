@@ -138,7 +138,7 @@ import { Vehicle, RecordEntry, UserProfile, ChecklistData, AppNotification } fro
 
 // --- Constants ---
 const LOGO_14BPM_URL = ASSETS.LOGO_14BPM;
-const LOGO_SISCOPI_URL = "/icon-512.png";
+const LOGO_SISCOPI_URL = ASSETS.LOGO_SISCOPI;
 const FALLBACK_LOGO = "https://cdn-icons-png.flaticon.com/512/1022/1022330.png";
 
 const removeWhiteBackground = (base64: string): Promise<string> => {
