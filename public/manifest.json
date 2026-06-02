@@ -13,19 +13,19 @@
   "categories": ["government", "productivity"],
   "icons": [
     {
-      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/37/c0/21/37c02181d20fc225a7e7f31597780a8d.png&w=192&h=192",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/37/c0/21/37c02181d20fc225a7e7f31597780a8d.png&w=512&h=512",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/37/c0/21/37c02181d20fc225a7e7f31597780a8d.png&w=512&h=512",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
