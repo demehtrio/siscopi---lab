@@ -100,6 +100,7 @@ import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import InsideQSH from './components/InsideQSH';
+import { ASSETS } from './assets/logos';
 
 const APP_BLUE_DARK = [30, 58, 138];
 
@@ -137,7 +138,7 @@ import { Vehicle, RecordEntry, UserProfile, ChecklistData, AppNotification } fro
 
 // --- Constants ---
 const LOGO_14BPM_URL = ASSETS.LOGO_14BPM;
-const LOGO_SISCOPI_URL = "https://i.pinimg.com/originals/37/c0/21/37c02181d20fc225a7e7f31597780a8d.png";
+const LOGO_SISCOPI_URL = ASSETS.LOGO_SISCOPI;
 const FALLBACK_LOGO = "https://cdn-icons-png.flaticon.com/512/1022/1022330.png";
 
 const removeWhiteBackground = (base64: string): Promise<string> => {
@@ -604,8 +605,6 @@ const ChecklistSearchableSelect = ({
     </div>
   );
 };
-
-import { ASSETS } from './assets/logos';
 
 export default function App() {
   const [isLocalMode, setIsLocalMode] = useState<boolean>(() => localStorage.getItem('siscopi_local_mode') === 'true');
@@ -3897,11 +3896,12 @@ export default function App() {
           </div>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-2">
-            <img 
+            <SafeImage 
               src="https://i.pinimg.com/originals/35/a9/da/35a9da586d140eeb8273d5270c4e4963.png" 
               alt="Logo PMPE" 
               className="h-16 w-auto object-contain"
-              referrerPolicy="no-referrer"
+              height={64}
+              icon={Siren}
             />
             <p className="mt-2 text-[10px] text-slate-400 uppercase tracking-widest font-bold">
               Polícia Militar de Pernambuco
@@ -4115,7 +4115,7 @@ export default function App() {
             <SidebarLink 
               active={activeTab === 'qsh'} 
               onClick={() => setActiveTab('qsh')}
-              icon={<img src="https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png" alt="QSH Icon" className="w-5 h-5 object-contain" />}
+              icon={<SafeImage src="https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png" alt="QSH Icon" className="w-5 h-5" width={20} icon={Siren} />}
               label="Dentro do QSH"
               badge="WEB"
             />
@@ -4179,7 +4179,7 @@ export default function App() {
             label="Cadastro VTR" 
           />
           <MobileNavLink active={activeTab === 'checklist'} onClick={() => setActiveTab('checklist')} icon={<ClipboardList size={20} />} label="Checklist VTR" />
-          <MobileNavLink active={activeTab === 'qsh'} onClick={() => setActiveTab('qsh')} icon={<img src="https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png" alt="" className="w-5 h-5 object-contain" />} label="Dentro do QSH" />
+          <MobileNavLink active={activeTab === 'qsh'} onClick={() => setActiveTab('qsh')} icon={<SafeImage src="https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png" alt="" className="w-5 h-5" width={20} icon={Siren} />} label="Dentro do QSH" />
           {isAdmin && <MobileNavLink active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<SettingsIcon size={20} />} label="Ajustes" />}
         </nav>
 
@@ -4483,11 +4483,12 @@ export default function App() {
                 </section>
 
                 <footer className="mt-16 py-8 border-t border-slate-100 flex flex-col items-center justify-center gap-4 text-center">
-                  <img 
+                  <SafeImage 
                     src="https://i.pinimg.com/originals/35/a9/da/35a9da586d140eeb8273d5270c4e4963.png" 
                     alt="Logo PMPE" 
                     className="h-16 w-auto object-contain"
-                    referrerPolicy="no-referrer"
+                    height={64}
+                    icon={Siren}
                   />
                   <p className="text-slate-400 text-xs font-medium">14º Batalhão de Polícia Militar • SisCOpI</p>
                 </footer>

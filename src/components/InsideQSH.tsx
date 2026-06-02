@@ -79,6 +79,13 @@ export interface InsideQSHProps {
 }
 
 // --- Helpers ---
+const getProxiedUrl = (url: string, width?: number, height?: number) => {
+  if (!url || url.includes('base64') || url.includes('wsrv.nl')) return url;
+  const w = width ? `&w=${width}` : '';
+  const h = height ? `&h=${height}` : '';
+  return `https://wsrv.nl/?url=${encodeURIComponent(url)}${w}${h}&output=png&n=-1`;
+};
+
 function isPointInPolygon(point: { lat: number; lng: number }, polygon: { lat: number; lng: number }[]) {
   if (!polygon || polygon.length < 3) return false;
   let isInside = false;
@@ -894,7 +901,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
             <img 
-              src="https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png" 
+              src={getProxiedUrl("https://i.pinimg.com/originals/48/fa/00/48fa0041415bc64827c2bb66328ceb54.png", 40, 40)} 
               alt="Dentro do QSH" 
               className="w-10 h-10 object-contain rounded-xl shadow-md border border-slate-100 bg-white" 
             />
