@@ -13,19 +13,19 @@
   "categories": ["government", "productivity"],
   "icons": [
     {
-      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/37/c0/21/37c02181d20fc225a7e7f31597780a8d.png&w=192&h=192",
+      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/82/32/4f/82324f25252b99654da9ab1145cc181a.png&w=192&h=192",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/37/c0/21/37c02181d20fc225a7e7f31597780a8d.png&w=512&h=512",
+      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/82/32/4f/82324f25252b99654da9ab1145cc181a.png&w=512&h=512",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/37/c0/21/37c02181d20fc225a7e7f31597780a8d.png&w=512&h=512",
+      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/82/32/4f/82324f25252b99654da9ab1145cc181a.png&w=512&h=512",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
