@@ -99,28 +99,6 @@ function isPointInPolygon(point: { lat: number; lng: number }, polygon: { lat: n
   return isInside;
 }
 
-function getCenterPointOfQuadrant(quad: Quadrant) {
-  let sumLat = 0;
-  let sumLng = 0;
-  const len = quad.coordinates.length;
-  if (len === 0) return { lat: -7.98600, lng: -38.28600 };
-  quad.coordinates.forEach(c => {
-    sumLat += c.lat;
-    sumLng += c.lng;
-  });
-  return { lat: parseFloat((sumLat / len).toFixed(5)), lng: parseFloat((sumLng / len).toFixed(5)) };
-}
-
-// Controller to handle center updates in Google Maps dynamically
-function MapCenterController({ userLocation }: { userLocation: { lat: number; lng: number } }) {
-  const map = useMap();
-  useEffect(() => {
-    if (!map) return;
-    map.panTo(userLocation);
-  }, [map, userLocation]);
-  return null;
-}
-
 // Polygon Layer for real Google Map
 function PolygonLayer({ coordinates, color = "#3b82f6" }: { coordinates: { lat: number; lng: number }[], color?: string }) {
   const map = useMap();
@@ -170,7 +148,6 @@ function LeafletMap({
   const reportMarkersRef = useRef<any[]>([]);
   const drawingPolygonRef = useRef<any>(null);
   const drawingMarkersRef = useRef<any[]>([]);
-  const lastFittedQuadrantIdRef = useRef<string>('');
   const [leafletLoaded, setLeafletLoaded] = useState(false);
 
   // Load Leaflet dynamically
@@ -261,12 +238,9 @@ function LeafletMap({
     const L = (window as any).L;
     if (!L) return;
 
-    if (lastFittedQuadrantIdRef.current !== activeQuadrant.id) {
-       lastFittedQuadrantIdRef.current = activeQuadrant.id;
-       const bounds = L.latLngBounds(activeQuadrant.coordinates.map(c => [c.lat, c.lng]));
-       map.fitBounds(bounds, { padding: [30, 30] });
-    }
-  }, [activeQuadrant.id, leafletLoaded]);
+    const bounds = L.latLngBounds(activeQuadrant.coordinates.map(c => [c.lat, c.lng]));
+    map.fitBounds(bounds, { padding: [30, 30] });
+  }, [activeQuadrant, leafletLoaded]);
 
   // Sync zoom/pan on userLocation change (smooth panning when location shifts)
   useEffect(() => {
@@ -481,12 +455,46 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
 
   // User current location
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({
-    lat: -7.98600,
-    lng: -38.28600
+    lat: -7.99011,
+    lng: -38.28605
   });
 
   // Stored reports
-  const [reports, setReports] = useState<QSHReport[]>([]);
+  const [reports, setReports] = useState<QSHReport[]>([
+    {
+      id: "qd9b1a",
+      timestamp: Date.now() - 3600000 * 2,
+      quality: 1,
+      safety: 4,
+      hygiene: 2,
+      coordinates: { lat: -7.99011, lng: -38.28605 },
+      note: "Ronda tática operacional realizada. Nenhuma atividade criminosa observada no centro. Pontos comerciais seguros.",
+      quadrantId: "qsh-21",
+      userName: "Operador Convidado"
+    },
+    {
+      id: "hz7f2c",
+      timestamp: Date.now() - 3600000 * 5,
+      quality: 4,
+      safety: 5,
+      hygiene: 5,
+      coordinates: { lat: -7.98772, lng: -38.27435 },
+      note: "CVLI suspeito relatado próximo ao beco escuro. Iluminação falha no quadrante superior esquerdo aumentando o risco local.",
+      quadrantId: "qsh-21",
+      userName: "Operador Convidado"
+    },
+    {
+      id: "qsh212-rep1",
+      timestamp: Date.now() - 3600000 * 1,
+      quality: 5,
+      safety: 4,
+      hygiene: 3,
+      coordinates: { lat: -7.86816, lng: -38.76791 },
+      note: "Ocorrência grave de CVLI registrada. Equipes do Batalhão acionadas e patrulhamento tático mobilizado no setor de São José do Belmonte.",
+      quadrantId: "qsh-21-2",
+      userName: "Operador Convidado"
+    }
+  ]);
 
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -550,7 +558,9 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
           userEmail: d.userEmail || ''
         });
       });
-      setReports(list);
+      if (list.length > 0) {
+        setReports(list);
+      }
     }, (err) => {
       console.error("Error listening to qsh_reports:", err);
     });
@@ -759,45 +769,13 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
+          setUserLocation(loc);
           
-          // Check if coordinates are inside ANY existing quadrant
-          const matchingQuadrant = quadrants.find(q => isPointInPolygon(loc, q.coordinates));
-          
-          if (matchingQuadrant) {
-            setUserLocation(loc);
-            setActiveQuadrantId(matchingQuadrant.id);
-            alert(`GPS Sincronizado com sucesso! Você está dentro do setor "${matchingQuadrant.name}".`);
-            return;
-          }
-          
-          // If not in any quadrant, ask to create a new quadrant or just update location
-          if (confirm(`Detectamos que sua geolocalização real (${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}) está fora de qualquer Setor Operacional QSH cadastrado atualmente.\n\nDeseja criar automaticamente um novo setor operacional QSH ao redor de sua posição real para poder testar e registrar ocorrências onde você está agora?`)) {
-            const size = 0.0025;
-            const finalName = `Setor GPS Real (${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)})`;
-            const coords = [
-              { lat: parseFloat((loc.lat - size * 0.8).toFixed(5)), lng: parseFloat((loc.lng - size).toFixed(5)) },
-              { lat: parseFloat((loc.lat + size * 0.8).toFixed(5)), lng: parseFloat((loc.lng - size).toFixed(5)) },
-              { lat: parseFloat((loc.lat + size * 0.8).toFixed(5)), lng: parseFloat((loc.lng + size).toFixed(5)) },
-              { lat: parseFloat((loc.lat - size * 0.8).toFixed(5)), lng: parseFloat((loc.lng + size).toFixed(5)) },
-              { lat: parseFloat((loc.lat - size * 0.8).toFixed(5)), lng: parseFloat((loc.lng - size).toFixed(5)) },
-            ];
-
-            const newQuad: Quadrant = {
-              id: `quad-${Date.now()}`,
-              name: finalName,
-              coordinates: coords
-            };
-
-            setQuadrants(prev => [...prev, newQuad]);
-            setUserLocation(loc);
-            setActiveQuadrantId(newQuad.id);
-          } else {
-            // Just update location, don't force virtual centroid unless they want to
-            if (confirm(`Deseja retornar virtualmente ao ponto central operacional do setor ativo "${activeQuadrant.name}" para simular patrulha? (Clique em "Cancelar" para apenas manter sua posição real fora da cobertura).`)) {
-              const centroid = getCenterPointOfQuadrant(activeQuadrant);
-              setUserLocation(centroid);
-            } else {
-              setUserLocation(loc);
+          // Check if coordinates look outside SDS/PE region (Brazil, Pernambuco is broadly S and W coords)
+          const isPeRegion = loc.lat < -1 && loc.lat > -11 && loc.lng < -32 && loc.lng > -45;
+          if (!isPeRegion) {
+            if (confirm(`Detectamos que sua geolocalização real (${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}) está fora do setor de atuação da SDS-PE. Deseja retornar ao ponto operacional de patrulha do quadrante atual?`)) {
+              setUserLocation(activeQuadrant.coordinates[0]);
             }
           }
         },
@@ -834,10 +812,10 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
   };
 
   const locationPresets = [
-    { name: "QSH 21.0 - Unidade (Dentro)", lat: -7.98600, lng: -38.28600 },
-    { name: "QSH 21.0 - Setor Leste (Dentro)", lat: -7.98772, lng: -38.28000 },
-    { name: "QSH 21.2 - Unidade (Dentro)", lat: -7.86816, lng: -38.76000 },
-    { name: "QSH 21.2 - Setor Leste (Dentro)", lat: -7.87100, lng: -38.75800 }
+    { name: "QSH 21.0 - Unidade", lat: -7.99011, lng: -38.28605 },
+    { name: "QSH 21.0 - Setor Leste", lat: -7.98772, lng: -38.27435 },
+    { name: "QSH 21.2 - Unidade", lat: -7.86816, lng: -38.76791 },
+    { name: "QSH 21.2 - Setor Leste", lat: -7.87984, lng: -38.74227 }
   ];
 
 
@@ -1382,7 +1360,6 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
                     }
                   }}
                 >
-                  <MapCenterController userLocation={userLocation} />
                   <PolygonLayer coordinates={activeQuadrant.coordinates} />
                   
                   {/* User marker representing custom coordinate */}

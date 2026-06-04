@@ -1,14 +1,8 @@
-const CACHE_NAME = 'siscop-v8';
+const CACHE_NAME = 'siscop-v6';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.png',
-  '/apple-touch-icon.png',
-  '/icon-192.png',
-  '/icon-192-maskable.png',
-  '/icon-512.png',
-  '/icon-512-maskable.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'
 ];
 
