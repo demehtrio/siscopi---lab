@@ -100,21 +100,25 @@ function isPointInPolygon(point: { lat: number; lng: number }, polygon: { lat: n
 }
 
 function getCenterPointOfQuadrant(quad: Quadrant) {
-  if (quad.id === 'qsh-21') {
-    return { lat: -7.98600, lng: -38.28600 };
-  } else if (quad.id === 'qsh-21-2') {
-    return { lat: -7.86816, lng: -38.76000 };
-  } else {
-    let sumLat = 0;
-    let sumLng = 0;
-    const len = quad.coordinates.length;
-    if (len === 0) return { lat: -7.98600, lng: -38.28600 };
-    quad.coordinates.forEach(c => {
-      sumLat += c.lat;
-      sumLng += c.lng;
-    });
-    return { lat: parseFloat((sumLat / len).toFixed(5)), lng: parseFloat((sumLng / len).toFixed(5)) };
-  }
+  let sumLat = 0;
+  let sumLng = 0;
+  const len = quad.coordinates.length;
+  if (len === 0) return { lat: -7.98600, lng: -38.28600 };
+  quad.coordinates.forEach(c => {
+    sumLat += c.lat;
+    sumLng += c.lng;
+  });
+  return { lat: parseFloat((sumLat / len).toFixed(5)), lng: parseFloat((sumLng / len).toFixed(5)) };
+}
+
+// Controller to handle center updates in Google Maps dynamically
+function MapCenterController({ userLocation }: { userLocation: { lat: number; lng: number } }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!map) return;
+    map.panTo(userLocation);
+  }, [map, userLocation]);
+  return null;
 }
 
 // Polygon Layer for real Google Map
@@ -166,6 +170,7 @@ function LeafletMap({
   const reportMarkersRef = useRef<any[]>([]);
   const drawingPolygonRef = useRef<any>(null);
   const drawingMarkersRef = useRef<any[]>([]);
+  const lastFittedQuadrantIdRef = useRef<string>('');
   const [leafletLoaded, setLeafletLoaded] = useState(false);
 
   // Load Leaflet dynamically
@@ -256,9 +261,12 @@ function LeafletMap({
     const L = (window as any).L;
     if (!L) return;
 
-    const bounds = L.latLngBounds(activeQuadrant.coordinates.map(c => [c.lat, c.lng]));
-    map.fitBounds(bounds, { padding: [30, 30] });
-  }, [activeQuadrant, leafletLoaded]);
+    if (lastFittedQuadrantIdRef.current !== activeQuadrant.id) {
+       lastFittedQuadrantIdRef.current = activeQuadrant.id;
+       const bounds = L.latLngBounds(activeQuadrant.coordinates.map(c => [c.lat, c.lng]));
+       map.fitBounds(bounds, { padding: [30, 30] });
+    }
+  }, [activeQuadrant.id, leafletLoaded]);
 
   // Sync zoom/pan on userLocation change (smooth panning when location shifts)
   useEffect(() => {
@@ -1374,6 +1382,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
                     }
                   }}
                 >
+                  <MapCenterController userLocation={userLocation} />
                   <PolygonLayer coordinates={activeQuadrant.coordinates} />
                   
                   {/* User marker representing custom coordinate */}
