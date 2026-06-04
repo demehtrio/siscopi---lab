@@ -357,44 +357,10 @@ function LeafletMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !leafletLoaded) return;
-    const L = (window as any).L;
-    if (!L) return;
 
-    // Clear old report markers
+    // Clear old report markers - Removed green and red dots from LeafletMap under QSH layout
     reportMarkersRef.current.forEach(m => m.remove());
     reportMarkersRef.current = [];
-
-    activeReports.forEach((report) => {
-      const avgRating = (report.quality + report.safety + report.hygiene) / 3;
-      const ratingColor = avgRating >= 4 ? "#10b981" : (avgRating >= 3 ? "#f59e0b" : "#ef4444");
-      
-      const pinIcon = L.divIcon({
-        className: 'leaflet-report-marker',
-        html: `
-          <div class="flex items-center justify-center font-sans">
-            <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-md relative group" style="background-color: ${ratingColor}; opacity: 0.9;">
-              <span class="text-[9px] text-white font-black">!</span>
-            </div>
-          </div>
-        `,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      });
-
-      const marker = L.marker([report.coordinates.lat, report.coordinates.lng], { icon: pinIcon }).addTo(map);
-      marker.bindPopup(`
-        <div class="p-1 font-sans text-xs">
-          <h4 class="font-bold text-slate-800 uppercase text-[10px] mb-1">RND #${report.id.substring(0, 4).toUpperCase()}</h4>
-          <p class="text-slate-600 leading-tight mb-2">${report.note || 'Sem anotações.'}</p>
-          <div class="grid grid-cols-3 gap-1 text-[9px] text-center font-bold">
-            <div class="bg-emerald-50 text-emerald-700 py-0.5 rounded">CVLI: ${report.quality}/5</div>
-            <div class="bg-blue-50 text-blue-700 py-0.5 rounded">Seg: ${report.safety}/5</div>
-            <div class="bg-amber-50 text-amber-700 py-0.5 rounded">Rond: ${report.hygiene}/5</div>
-          </div>
-        </div>
-      `);
-      reportMarkersRef.current.push(marker);
-    });
   }, [activeReports, leafletLoaded]);
 
   return (
@@ -1370,14 +1336,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
                     </div>
                   </AdvancedMarker>
 
-                  {/* Reports rendered on Google Map */}
-                  {activeReports.map((report) => (
-                    <AdvancedMarker key={report.id} position={report.coordinates}>
-                      <GooglePin background="#10b981" borderColor="#ffffff" glyphColor="#ffffff" scale={0.9}>
-                        <CheckCircle2 className="text-white size-3" />
-                      </GooglePin>
-                    </AdvancedMarker>
-                  ))}
+                  {/* Reports rendered on Google Map - Removed green/red dots from GoogleMap under QSH layout */}
                 </GoogleMap>
               </APIProvider>
             ) : null}
@@ -1499,21 +1458,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
                     />
                   )}
 
-                  {/* Render QSH stored report pins */}
-                  {activeReports.map((report) => {
-                    const { x, y } = getXY(report.coordinates.lat, report.coordinates.lng);
-                    const avgRating = (report.quality + report.safety + report.hygiene) / 3;
-                    const ratingColor = avgRating >= 4 ? "#10b981" : (avgRating >= 3 ? "#f59e0b" : "#ef4444");
-                    return (
-                      <g key={report.id}>
-                        <circle cx={x} cy={y} r="2.8" fill={ratingColor} opacity="0.3" />
-                        <circle cx={x} cy={y} r="1.3" fill={ratingColor} />
-                        <text x={x + 2} y={y + 0.8} fill="#64748b" fontSize="1.5" className="font-mono">
-                          #{report.id.substring(0, 4).toUpperCase()}
-                        </text>
-                      </g>
-                    );
-                  })}
+                  {/* Render QSH stored report pins - Removed green/red dots from SimulatedMap under QSH layout */}
 
                   {/* Simulated User Location dot */}
                   {(() => {
