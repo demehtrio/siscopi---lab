@@ -752,18 +752,46 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
             lng: position.coords.longitude
           };
           
-          // Check if coordinates are inside the active quadrant
-          const isInsideActive = isPointInPolygon(loc, activeQuadrant.coordinates);
+          // Check if coordinates are inside ANY existing quadrant
+          const matchingQuadrant = quadrants.find(q => isPointInPolygon(loc, q.coordinates));
           
-          if (!isInsideActive) {
-            const centroid = getCenterPointOfQuadrant(activeQuadrant);
-            if (confirm(`Detectamos que sua geolocalização real (${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}) está fora dos limites do Quadrante Operacional QSH Ativo ("${activeQuadrant.name}").\n\nDeseja retornar virtualmente ao ponto central operacional de patrulha deste quadrante para garantir cobertura QSH de teste?`)) {
-              setUserLocation(centroid);
-              return;
-            }
+          if (matchingQuadrant) {
+            setUserLocation(loc);
+            setActiveQuadrantId(matchingQuadrant.id);
+            alert(`GPS Sincronizado com sucesso! Você está dentro do setor "${matchingQuadrant.name}".`);
+            return;
           }
           
-          setUserLocation(loc);
+          // If not in any quadrant, ask to create a new quadrant or just update location
+          if (confirm(`Detectamos que sua geolocalização real (${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}) está fora de qualquer Setor Operacional QSH cadastrado atualmente.\n\nDeseja criar automaticamente um novo setor operacional QSH ao redor de sua posição real para poder testar e registrar ocorrências onde você está agora?`)) {
+            const size = 0.0025;
+            const finalName = `Setor GPS Real (${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)})`;
+            const coords = [
+              { lat: parseFloat((loc.lat - size * 0.8).toFixed(5)), lng: parseFloat((loc.lng - size).toFixed(5)) },
+              { lat: parseFloat((loc.lat + size * 0.8).toFixed(5)), lng: parseFloat((loc.lng - size).toFixed(5)) },
+              { lat: parseFloat((loc.lat + size * 0.8).toFixed(5)), lng: parseFloat((loc.lng + size).toFixed(5)) },
+              { lat: parseFloat((loc.lat - size * 0.8).toFixed(5)), lng: parseFloat((loc.lng + size).toFixed(5)) },
+              { lat: parseFloat((loc.lat - size * 0.8).toFixed(5)), lng: parseFloat((loc.lng - size).toFixed(5)) },
+            ];
+
+            const newQuad: Quadrant = {
+              id: `quad-${Date.now()}`,
+              name: finalName,
+              coordinates: coords
+            };
+
+            setQuadrants(prev => [...prev, newQuad]);
+            setUserLocation(loc);
+            setActiveQuadrantId(newQuad.id);
+          } else {
+            // Just update location, don't force virtual centroid unless they want to
+            if (confirm(`Deseja retornar virtualmente ao ponto central operacional do setor ativo "${activeQuadrant.name}" para simular patrulha? (Clique em "Cancelar" para apenas manter sua posição real fora da cobertura).`)) {
+              const centroid = getCenterPointOfQuadrant(activeQuadrant);
+              setUserLocation(centroid);
+            } else {
+              setUserLocation(loc);
+            }
+          }
         },
         (error) => {
           setIsSyncingLocation(false);
