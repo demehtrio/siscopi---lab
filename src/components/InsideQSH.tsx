@@ -478,41 +478,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
   });
 
   // Stored reports
-  const [reports, setReports] = useState<QSHReport[]>([
-    {
-      id: "qd9b1a",
-      timestamp: Date.now() - 3600000 * 2,
-      quality: 1,
-      safety: 4,
-      hygiene: 2,
-      coordinates: { lat: -7.98600, lng: -38.28600 },
-      note: "Ronda tática operacional realizada. Nenhuma atividade criminosa observada no centro. Pontos comerciais seguros.",
-      quadrantId: "qsh-21",
-      userName: "Operador Convidado"
-    },
-    {
-      id: "hz7f2c",
-      timestamp: Date.now() - 3600000 * 5,
-      quality: 4,
-      safety: 5,
-      hygiene: 5,
-      coordinates: { lat: -7.98772, lng: -38.28000 },
-      note: "CVLI suspeito relatado próximo ao beco escuro. Iluminação falha no quadrante superior esquerdo aumentando o risco local.",
-      quadrantId: "qsh-21",
-      userName: "Operador Convidado"
-    },
-    {
-      id: "qsh212-rep1",
-      timestamp: Date.now() - 3600000 * 1,
-      quality: 5,
-      safety: 4,
-      hygiene: 3,
-      coordinates: { lat: -7.86816, lng: -38.76000 },
-      note: "Ocorrência grave de CVLI registrada. Equipes do Batalhão acionadas e patrulhamento tático mobilizado no setor de São José do Belmonte.",
-      quadrantId: "qsh-21-2",
-      userName: "Operador Convidado"
-    }
-  ]);
+  const [reports, setReports] = useState<QSHReport[]>([]);
 
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -576,9 +542,7 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
           userEmail: d.userEmail || ''
         });
       });
-      if (list.length > 0) {
-        setReports(list);
-      }
+      setReports(list);
     }, (err) => {
       console.error("Error listening to qsh_reports:", err);
     });
