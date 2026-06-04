@@ -214,7 +214,13 @@ const compressImage = async (base64: string, maxWidth = 600, maxHeight = 600, qu
   });
 };
 
+const imageCache: Record<string, string | null> = {};
+
 const loadImage = async (url: string): Promise<string | null> => {
+  if (imageCache[url]) {
+    return imageCache[url];
+  }
+
   const fetchAsBase64 = async (targetUrl: string): Promise<string | null> => {
     try {
       const response = await fetch(targetUrl);
@@ -259,12 +265,30 @@ const loadImage = async (url: string): Promise<string | null> => {
     base64 = await fetchAsBase64(FALLBACK_LOGO);
   }
 
+  let result = base64;
   // If it's the 14th BPM logo, remove the white background
   if (base64 && url === LOGO_14BPM_URL) {
-    return await removeWhiteBackground(base64);
+    result = await removeWhiteBackground(base64);
   }
 
-  return base64;
+  imageCache[url] = result;
+  return result;
+};
+
+// Background preloading of logos and icons to avoid latency on PDF creation
+const preloadLogos = async () => {
+  preloadImage(LOGO_14BPM_URL);
+  preloadImage(LOGO_SISCOPI_URL);
+};
+
+const preloadImage = (url: string) => {
+  setTimeout(async () => {
+    try {
+      await loadImage(url);
+    } catch (e) {
+      console.warn("Failed to background pre-load logo URL:", url, e);
+    }
+  }, 100);
 };
 
 /**
@@ -645,6 +669,22 @@ export default function App() {
   const [omeOrigemList, setOmeOrigemList] = useState<string[]>(["14º BPM"]);
   const [adminList, setAdminList] = useState<string[]>(["demetriomarques@gmail.com"]);
   const [authorizedList, setAuthorizedList] = useState<string[]>([]);
+  
+  useEffect(() => {
+    preloadLogos();
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam) {
+        const validTabs = ['dashboard', 'form', 'history', 'reports', 'settings', 'cadastro_vtr', 'checklist', 'qsh'];
+        if (validTabs.includes(tabParam)) {
+          setActiveTab(tabParam as any);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to parse URL tab parameter", e);
+    }
+  }, []);
   
   // --- Cadastro VTR State ---
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);

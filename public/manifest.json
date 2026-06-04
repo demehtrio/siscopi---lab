@@ -13,22 +13,76 @@
   "categories": ["government", "productivity"],
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/82/32/4f/82324f25252b99654da9ab1145cc181a.png&w=192&h=192&fit=contain&format=png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/82/32/4f/82324f25252b99654da9ab1145cc181a.png&w=512&h=512&fit=contain&format=png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/82/32/4f/82324f25252b99654da9ab1145cc181a.png&w=512&h=512&fit=contain&format=png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Checklist de VTR",
+      "short_name": "Checklist",
+      "description": "Fazer checklist de viatura",
+      "url": "/?tab=checklist",
+      "icons": [
+        {
+          "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/82/32/4f/82324f25252b99654da9ab1145cc181a.png&w=192&h=192&fit=contain&format=png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Cadastro de VTR",
+      "short_name": "VTRs",
+      "description": "Movimentação de Viaturas",
+      "url": "/?tab=cadastro_vtr",
+      "icons": [
+        {
+          "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/82/32/4f/82324f25252b99654da9ab1145cc181a.png&w=192&h=192&fit=contain&format=png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Ronda Quadrante (QSH)",
+      "short_name": "Quadrante",
+      "description": "Lançar ronda no Quadrante",
+      "url": "/?tab=qsh",
+      "icons": [
+        {
+          "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/82/32/4f/82324f25252b99654da9ab1145cc181a.png&w=192&h=192&fit=contain&format=png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Lançamento de Atividade",
+      "short_name": "Novo Lançamento",
+      "description": "Cadastrar novo efetivo ou atividade",
+      "url": "/?tab=form",
+      "icons": [
+        {
+          "src": "https://wsrv.nl/?url=https://i.pinimg.com/originals/82/32/4f/82324f25252b99654da9ab1145cc181a.png&w=192&h=192&fit=contain&format=png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
