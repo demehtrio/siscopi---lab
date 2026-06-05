@@ -4482,6 +4482,47 @@ export default function App() {
                   </div>
                 </section>
 
+                {/* Banner AUTOVISION */}
+                <div className="mt-12 p-6 sm:p-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white rounded-[2.5rem] border border-slate-800 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 group">
+                  {/* Decorative background visual elements */}
+                  <div className="absolute top-0 right-0 p-24 bg-blue-500/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
+                  
+                  <div className="relative z-10 flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+                    <div className="w-16 h-16 bg-white/10 group-hover:bg-white/15 rounded-3xl flex items-center justify-center border border-white/10 shadow-lg shrink-0 transition-all duration-300 relative">
+                      <Camera className="w-8 h-8 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
+                      <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-blue-500"></span>
+                      </span>
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mb-1.5">
+                        <h3 className="text-2xl font-black tracking-tight text-white">AUTOVISION</h3>
+                        <span className="text-[9px] font-black bg-blue-500/20 border border-blue-500/30 text-blue-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Monitoramento</span>
+                      </div>
+                      <p className="text-slate-300 text-sm font-medium max-w-xl leading-relaxed">
+                        Sistema Inteligente de Monitoramento e Reconhecimento de Placas e Veículos. Acesso regulamentado de segurança.
+                      </p>
+                      <p className="text-slate-400 text-xs font-semibold mt-1 flex items-center justify-center sm:justify-start gap-1.5">
+                        <AlertTriangle className="size-3.5 text-amber-500 shrink-0" />
+                        <span>Acesso somente a usuários cadastrados no sistema.</span>
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="relative z-10 w-full md:w-auto shrink-0 py-1">
+                    <a 
+                      href="http://189.39.115.178:8082/index.php" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-full md:w-auto px-6 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl shadow-lg shadow-blue-600/10 hover:shadow-blue-600/25 transition-all text-center flex items-center justify-center gap-2 active:scale-98 group/btn_autovision text-sm"
+                    >
+                      <span>Acessar AUTOVISION</span>
+                      <ExternalLink size={14} className="group-hover/btn_autovision:translate-x-0.5 group-hover/btn_autovision:-translate-y-0.5 transition-transform" />
+                    </a>
+                  </div>
+                </div>
+
                 <footer className="mt-16 py-8 border-t border-slate-100 flex flex-col items-center justify-center gap-4 text-center">
                   <SafeImage 
                     src="https://i.pinimg.com/originals/35/a9/da/35a9da586d140eeb8273d5270c4e4963.png" 
