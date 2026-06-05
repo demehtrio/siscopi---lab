@@ -4438,6 +4438,45 @@ export default function App() {
                   )}
                 </div>
 
+                {/* Banner AUTOVISION */}
+                <div className="mt-8 p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
+                  {/* Decorative background visual elements */}
+                  <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
+                  
+                  <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                    <div>
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mb-1.5">
+                        <img 
+                          src={autovisionLogo} 
+                          alt="AutoVision" 
+                          className="h-7 w-auto object-contain rounded-lg bg-white px-2 py-0.5 shadow-sm group-hover:scale-103 transition-transform"
+                          referrerPolicy="no-referrer"
+                        />
+                        <span className="text-[8px] font-black bg-blue-500/20 border border-blue-500/30 text-blue-300 px-2 py-0.5 rounded-full uppercase tracking-wider">Monitoramento</span>
+                      </div>
+                      <p className="text-slate-300 text-xs font-medium max-w-xl leading-relaxed">
+                        Sistema Inteligente de Monitoramento de Frota.
+                      </p>
+                      <p className="text-slate-400 text-[11px] font-semibold mt-0.5 flex items-center justify-center sm:justify-start gap-1">
+                        <AlertTriangle className="size-3 text-amber-500 shrink-0" />
+                        <span>Acesso somente a usuários cadastrados no sistema.</span>
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="relative z-10 w-full md:w-auto shrink-0">
+                    <a 
+                      href="http://189.39.115.178:8082/index.php" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-full md:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl shadow-md shadow-blue-600/10 hover:shadow-blue-600/25 transition-all text-center flex items-center justify-center gap-1.5 active:scale-98 group/btn_autovision text-xs"
+                    >
+                      <span>Acessar AUTOVISION</span>
+                      <ExternalLink size={12} className="group-hover/btn_autovision:translate-x-0.5 group-hover/btn_autovision:-translate-y-0.5 transition-transform" />
+                    </a>
+                  </div>
+                </div>
+
                 <section className="mt-12">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-slate-900">Registros de Hoje</h2>
@@ -4482,45 +4521,6 @@ export default function App() {
                     )}
                   </div>
                 </section>
-
-                {/* Banner AUTOVISION */}
-                <div className="mt-8 p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
-                  {/* Decorative background visual elements */}
-                  <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
-                  
-                  <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-                    <div>
-                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mb-1.5">
-                        <img 
-                          src={autovisionLogo} 
-                          alt="AutoVision" 
-                          className="h-7 w-auto object-contain rounded-lg bg-white px-2 py-0.5 shadow-sm group-hover:scale-103 transition-transform"
-                          referrerPolicy="no-referrer"
-                        />
-                        <span className="text-[8px] font-black bg-blue-500/20 border border-blue-500/30 text-blue-300 px-2 py-0.5 rounded-full uppercase tracking-wider">Monitoramento</span>
-                      </div>
-                      <p className="text-slate-300 text-xs font-medium max-w-xl leading-relaxed">
-                        Sistema Inteligente de Monitoramento de Frota. Acesso regulamentado.
-                      </p>
-                      <p className="text-slate-400 text-[11px] font-semibold mt-0.5 flex items-center justify-center sm:justify-start gap-1">
-                        <AlertTriangle className="size-3 text-amber-500 shrink-0" />
-                        <span>Acesso somente a usuários cadastrados no sistema.</span>
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="relative z-10 w-full md:w-auto shrink-0">
-                    <a 
-                      href="http://189.39.115.178:8082/index.php" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="w-full md:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl shadow-md shadow-blue-600/10 hover:shadow-blue-600/25 transition-all text-center flex items-center justify-center gap-1.5 active:scale-98 group/btn_autovision text-xs"
-                    >
-                      <span>Acessar AUTOVISION</span>
-                      <ExternalLink size={12} className="group-hover/btn_autovision:translate-x-0.5 group-hover/btn_autovision:-translate-y-0.5 transition-transform" />
-                    </a>
-                  </div>
-                </div>
 
                 <footer className="mt-16 py-8 border-t border-slate-100 flex flex-col items-center justify-center gap-4 text-center">
                   <SafeImage 
