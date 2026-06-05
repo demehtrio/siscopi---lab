@@ -4501,7 +4501,7 @@ export default function App() {
                         <span className="text-[8px] font-black bg-blue-500/20 border border-blue-500/30 text-blue-300 px-2 py-0.5 rounded-full uppercase tracking-wider">Monitoramento</span>
                       </div>
                       <p className="text-slate-300 text-xs font-medium max-w-xl leading-relaxed">
-                        Sistema Inteligente de Monitoramento e Reconhecimento de Placas e Veículos. Acesso regulamentado.
+                        Sistema Inteligente de Monitoramento de Frota. Acesso regulamentado.
                       </p>
                       <p className="text-slate-400 text-[11px] font-semibold mt-0.5 flex items-center justify-center sm:justify-start gap-1">
                         <AlertTriangle className="size-3 text-amber-500 shrink-0" />
