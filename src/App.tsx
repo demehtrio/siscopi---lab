@@ -4345,7 +4345,7 @@ export default function App() {
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                           <h3 className="text-xl font-black tracking-tight text-white">Dentro do QSH</h3>
-                          <span className="text-[9px] font-black bg-red-500/25 border border-red-500/30 text-rose-300 px-2 py-0.5 rounded-full uppercase tracking-wider">Monitoramento</span>
+                          <span className="text-[9px] font-black bg-red-500/25 border border-red-500/30 text-rose-300 px-2 py-0.5 rounded-full uppercase tracking-wider">Localização</span>
                         </div>
                         <p className="text-red-200/85 text-xs sm:text-sm font-medium leading-relaxed">
                           Acompanhe em tempo real sua localização dentro do Quadrante de Segurança de Homicídios (QSH).
