@@ -101,6 +101,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import InsideQSH from './components/InsideQSH';
 import { ASSETS } from './assets/logos';
+import autovisionLogo from './assets/images/autovision_logo_1780679135411.png';
 
 const APP_BLUE_DARK = [30, 58, 138];
 
@@ -4489,8 +4490,13 @@ export default function App() {
                   
                   <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
                     <div>
-                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-0.5">
-                        <h3 className="text-lg font-black tracking-tight text-white leading-none">AUTOVISION</h3>
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mb-1.5">
+                        <img 
+                          src={autovisionLogo} 
+                          alt="AutoVision" 
+                          className="h-7 w-auto object-contain rounded-lg bg-white px-2 py-0.5 shadow-sm group-hover:scale-103 transition-transform"
+                          referrerPolicy="no-referrer"
+                        />
                         <span className="text-[8px] font-black bg-blue-500/20 border border-blue-500/30 text-blue-300 px-2 py-0.5 rounded-full uppercase tracking-wider">Monitoramento</span>
                       </div>
                       <p className="text-slate-300 text-xs font-medium max-w-xl leading-relaxed">
