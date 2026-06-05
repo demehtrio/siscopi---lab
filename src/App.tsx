@@ -4488,13 +4488,6 @@ export default function App() {
                   <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
                   
                   <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-                    <div className="w-11 h-11 bg-white/10 group-hover:bg-white/15 rounded-2xl flex items-center justify-center border border-white/10 shadow-lg shrink-0 transition-all duration-300 relative">
-                      <Camera className="w-5.5 h-5.5 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
-                      </span>
-                    </div>
                     <div>
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-0.5">
                         <h3 className="text-lg font-black tracking-tight text-white leading-none">AUTOVISION</h3>
