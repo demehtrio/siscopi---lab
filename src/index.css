@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
@@ -7,4 +9,153 @@
   --color-pmpe-dark: #060d1f;
   --color-pmpe-gold: #c5a059;
   --color-pmpe-red: #d32f2f;
+}
+
+/* Dark Mode Global Theme Overrides */
+.dark {
+  color-scheme: dark;
+
+  /* Body background override */
+  body, html {
+    background-color: #070c18 !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* Core UI layout: Map light-mode white components to elegant midnight charcoal/navy */
+  .bg-white {
+    background-color: #0f1626 !important; /* Elegant slate card base */
+  }
+
+  .bg-slate-50 {
+    background-color: #070c18 !important; /* Deep layout canvas background */
+  }
+
+  .bg-slate-100 {
+    background-color: #17223b !important; /* Inner box areas style */
+  }
+
+  .bg-blue-50 {
+    background-color: rgba(30, 41, 59, 0.4) !important;
+  }
+
+  /* Hover classes overrides */
+  .hover\:bg-slate-50:hover {
+    background-color: #17223b !important;
+  }
+
+  .hover\:bg-slate-100:hover {
+    background-color: #1e2d4f !important;
+  }
+
+  .hover\:bg-blue-50:hover {
+    background-color: rgba(30, 41, 59, 0.6) !important;
+  }
+
+  /* Borders overrides */
+  .border-slate-200, .border-slate-100, .border-slate-300 {
+    border-color: #1e2a4a !important;
+  }
+
+  /* Contrast text color adjustments */
+  .text-slate-900 {
+    color: #f8fafc !important; /* Clean near-white text */
+  }
+
+  .text-slate-800 {
+    color: #f1f5f9 !important;
+  }
+
+  .text-slate-700 {
+    color: #cbd5e1 !important;
+  }
+
+  .text-slate-600 {
+    color: #94a3b8 !important;
+  }
+
+  .text-slate-500 {
+    color: #94a3b8 !important;
+  }
+
+  .text-slate-400 {
+    color: #64748b !important;
+  }
+
+  /* Form Elements: Inputs, select elements, textareas */
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+    background-color: #151f35 !important;
+    color: #ffffff !important;
+    border-color: #23355a !important;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: #475569 !important;
+  }
+
+  /* Tables styling */
+  table {
+    border-color: #1e2a4a !important;
+  }
+
+  tr {
+    border-bottom-color: #1e2a4a !important;
+  }
+
+  th {
+    background-color: #0e1628 !important;
+    color: #94a3b8 !important;
+    border-bottom-color: #1e2a4a !important;
+  }
+
+  td {
+    border-bottom-color: #111827 !important;
+  }
+
+  .divide-y > :not([hidden]) ~ :not([hidden]) {
+    border-color: #1e2a4a !important;
+  }
+
+  /* Specific color corrections for headers */
+  .text-blue-900 {
+    color: #60a5fa !important; /* High contrast bright blue */
+  }
+
+  .text-blue-950 {
+    color: #93c5fd !important;
+  }
+
+  .text-blue-800 {
+    color: #60a5fa !important;
+  }
+
+  .text-emerald-900 {
+    color: #34d399 !important;
+  }
+
+  .text-emerald-800 {
+    color: #34d399 !important;
+  }
+
+  .bg-emerald-50 {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+  }
+
+  /* Badge and status styles */
+  .bg-blue-500\/5 {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+  }
+
+  .bg-blue-500\/10 {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+  }
+
+  /* Shadow adjustment for strong readability and crisp structures */
+  .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.55) !important;
+  }
 }
