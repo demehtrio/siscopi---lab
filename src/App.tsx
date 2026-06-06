@@ -92,7 +92,9 @@ import {
   MessageCircle,
   ChevronLeft,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { jsPDF } from 'jspdf';
@@ -608,6 +610,20 @@ const ChecklistSearchableSelect = ({
 };
 
 export default function App() {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('theme');
+    return (saved === 'dark' || saved === 'light') ? saved : 'light';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   const [isLocalMode, setIsLocalMode] = useState<boolean>(() => localStorage.getItem('siscopi_local_mode') === 'true');
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null);
@@ -3985,28 +4001,28 @@ export default function App() {
         onMarkAllRead={markAllAsRead}
       />
 
-      <div className="min-h-screen bg-slate-50 pb-20 md:pb-0 md:pl-64">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20 md:pb-0 md:pl-64 transition-colors duration-300">
         {/* Logout Confirmation Modal */}
         {showLogoutModal && (
           <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
               <div className="p-8 text-center">
-                <div className="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
                   <LogOut size={40} />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2">Sair do Sistema?</h3>
-                <p className="text-slate-500 font-medium">Tem certeza que deseja sair? Você precisará fazer login novamente para acessar o SisCOpI.</p>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 mb-2">Sair do Sistema?</h3>
+                <p className="text-slate-500 dark:text-slate-400 font-medium">Tem certeza que deseja sair? Você precisará fazer login novamente para acessar o SisCOpI.</p>
               </div>
-              <div className="flex border-t border-slate-100">
+              <div className="flex border-t border-slate-100 dark:border-slate-800">
                 <button 
                   onClick={() => setShowLogoutModal(false)}
-                  className="flex-1 p-5 text-slate-600 font-bold hover:bg-slate-50 transition-colors border-r border-slate-100"
+                  className="flex-1 p-5 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-r border-slate-100 dark:border-slate-800"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={confirmLogout}
-                  className="flex-1 p-5 text-red-600 font-black hover:bg-red-50 transition-colors"
+                  className="flex-1 p-5 text-red-600 dark:text-red-400 font-black hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                 >
                   Sim, Sair
                 </button>
@@ -4018,31 +4034,31 @@ export default function App() {
         {/* Delete Confirmation Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
               <div className="p-8 text-center">
-                <div className="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Trash2 size={40} />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2">Excluir Registro?</h3>
-                <p className="text-slate-500 font-medium">
+                <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 mb-2">Excluir Registro?</h3>
+                <p className="text-slate-500 dark:text-slate-400 font-medium">
                   Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.
                 </p>
                 {itemToDelete && (
-                  <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs font-mono text-slate-500 break-all">
+                  <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-100 dark:border-slate-800 text-xs font-mono text-slate-500 dark:text-slate-400 break-all">
                     {itemToDelete.prefixoViatura || itemToDelete.prefixo || itemToDelete.unidade || itemToDelete.funcao || itemToDelete.graduacaoNomeMatricula || "Registro"}
                   </div>
                 )}
               </div>
-              <div className="flex border-t border-slate-100">
+              <div className="flex border-t border-slate-100 dark:border-slate-800">
                 <button 
                   onClick={() => { setShowDeleteModal(false); setItemToDelete(null); }}
-                  className="flex-1 p-5 text-slate-600 font-bold hover:bg-slate-50 transition-colors border-r border-slate-100"
+                  className="flex-1 p-5 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-r border-slate-100 dark:border-slate-800"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={confirmDelete}
-                  className="flex-1 p-5 text-red-600 font-black hover:bg-red-50 transition-colors"
+                  className="flex-1 p-5 text-red-600 dark:text-red-400 font-black hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                 >
                   Sim, Excluir
                 </button>
@@ -4052,7 +4068,7 @@ export default function App() {
         )}
 
         {/* Sidebar Desktop */}
-        <aside className="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-200">
+        <aside className="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-colors duration-300">
           <div className="flex flex-col bg-blue-900 text-white border-b-4 border-red-600 shadow-lg">
             <div className="p-6 flex items-center gap-3">
               <div className="bg-white p-1.5 rounded-xl shadow-inner">
@@ -4138,34 +4154,56 @@ export default function App() {
             />
           </nav>
 
-          <div className="mt-auto pt-6 border-t border-slate-100">
+          <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
+            {/* Theme Toggle Button */}
+            <div className="px-1 mb-4">
+              <div className="flex items-center justify-between p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs">
+                <button
+                  type="button"
+                  onClick={() => setTheme('light')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg font-bold transition-all ${theme === 'light' ? 'bg-white dark:bg-slate-700 text-blue-950 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
+                >
+                  <Sun size={14} />
+                  <span>Claro</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme('dark')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg font-bold transition-all ${theme === 'dark' ? 'bg-white dark:bg-slate-700 text-blue-950 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
+                >
+                  <Moon size={14} />
+                  <span>Escuro</span>
+                </button>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3 mb-4">
               <img 
                 src={(user.photoURL && user.photoURL.trim() !== "") ? user.photoURL : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`} 
                 alt={user.displayName || ""} 
-                className="w-10 h-10 rounded-full border border-slate-200" 
+                className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800" 
                 onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`; }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-900 truncate">{user.displayName}</p>
-                <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{user.displayName}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
               </div>
             </div>
             <button 
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 p-3 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+              className="w-full flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
             >
               <LogOut size={20} />
               Sair
             </button>
-            <div className="text-center mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+            <div className="text-center mt-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
               Versão {__APP_VERSION__}
             </div>
           </div>
         </aside>
 
         {/* Mobile Nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-2 z-50 shadow-2xl overflow-x-auto no-scrollbar">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around p-2 z-50 shadow-2xl overflow-x-auto no-scrollbar transition-colors duration-300">
           <MobileNavLink active={activeTab === 'dashboard'} onClick={() => { setActiveTab('dashboard'); setFormType(null); }} icon={<LayoutDashboard size={20} />} label="Início" />
           <MobileNavLink active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History size={20} />} label="Histórico" />
           <MobileNavLink active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} icon={<BarChart3 size={20} />} label="Relatórios" />
@@ -4206,7 +4244,14 @@ export default function App() {
               />
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+              title={theme === 'light' ? "Mudar para tema escuro" : "Mudar para tema claro"}
+            >
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            </button>
             <button 
               onClick={() => setIsNotificationCenterOpen(true)}
               className="relative p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
@@ -6037,10 +6082,10 @@ function SidebarLink({ active, onClick, icon, label, badge }: { active: boolean,
     <button 
       onClick={onClick}
       className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all font-bold group relative ${
-        active ? 'bg-blue-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+        active ? 'bg-blue-900 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
       }`}
     >
-      <div className={`${active ? 'text-red-500' : 'text-slate-400 group-hover:text-blue-600'} transition-transform duration-300 group-hover:scale-110`}>
+      <div className={`${active ? 'text-red-500' : 'text-slate-400 dark:text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-400'} transition-transform duration-300 group-hover:scale-110`}>
         {icon}
       </div>
       <span className="flex-1 text-left">{label}</span>
@@ -6057,24 +6102,24 @@ function MobileNavLink({ active, onClick, icon, label }: { active: boolean, onCl
   return (
     <button 
       onClick={onClick}
-      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${active ? 'text-blue-900 bg-blue-50' : 'text-slate-400'}`}
+      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${active ? 'text-blue-900 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40' : 'text-slate-400 dark:text-slate-500'}`}
     >
-      <div className={`${active ? 'text-red-600' : ''}`}>
+      <div className={`${active ? 'text-red-600 dark:text-red-400' : ''}`}>
         {icon}
       </div>
-      <span className={`text-[9px] font-black uppercase tracking-tighter ${active ? 'text-blue-900' : 'text-slate-400'}`}>{label}</span>
+      <span className={`text-[9px] font-black uppercase tracking-tighter ${active ? 'text-blue-900 dark:text-blue-400' : 'text-slate-400 dark:text-slate-550'}`}>{label}</span>
     </button>
   );
 }
 
 function DashboardCard({ title, description, onClick, color = "blue", icon }: { title: string, description: string, onClick: () => void, color?: "blue" | "emerald" | "orange" | "slate" | "red" | "indigo", icon?: React.ReactNode }) {
   const borderClasses = {
-    blue: "hover:border-blue-300",
-    emerald: "hover:border-emerald-300",
-    orange: "hover:border-orange-300",
-    slate: "hover:border-slate-300",
-    red: "hover:border-red-300",
-    indigo: "hover:border-indigo-300"
+    blue: "hover:border-blue-300 dark:hover:border-blue-800",
+    emerald: "hover:border-emerald-300 dark:hover:border-emerald-800",
+    orange: "hover:border-orange-300 dark:hover:border-orange-800",
+    slate: "hover:border-slate-300 dark:hover:border-slate-800",
+    red: "hover:border-red-300 dark:hover:border-red-800",
+    indigo: "hover:border-indigo-300 dark:hover:border-indigo-800"
   };
 
   const accentClasses = {
@@ -6089,25 +6134,25 @@ function DashboardCard({ title, description, onClick, color = "blue", icon }: { 
   return (
     <button 
       onClick={onClick}
-      className={`bg-white p-8 rounded-[2.5rem] border border-slate-200 text-left hover:shadow-2xl transition-all duration-300 group relative overflow-hidden flex flex-col h-full ${borderClasses[color]}`}
+      className={`bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 text-left hover:shadow-2xl transition-all duration-300 group relative overflow-hidden flex flex-col h-full ${borderClasses[color]}`}
     >
       <div className="flex justify-between items-start mb-6">
         <div className={`w-12 h-2 rounded-full transition-all duration-300 ${accentClasses[color]}`} />
-        {icon && <div className="text-slate-400 group-hover:text-blue-600 transition-colors">{icon}</div>}
+        {icon && <div className="text-slate-400 dark:text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{icon}</div>}
       </div>
       
       <div className="flex-grow">
-        <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight group-hover:text-blue-900 transition-colors">{title}</h3>
-        <p className="text-slate-500 text-sm font-medium leading-relaxed mb-6">{description}</p>
+        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight group-hover:text-blue-900 dark:group-hover:text-blue-400 transition-colors">{title}</h3>
+        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed mb-6">{description}</p>
       </div>
 
-      <div className="flex items-center text-blue-600 text-sm font-black uppercase tracking-widest gap-2 mt-auto">
+      <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-black uppercase tracking-widest gap-2 mt-auto">
         <span>Acessar</span>
         <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
       </div>
       
       {/* Decorative background element */}
-      <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-slate-50 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 scale-50 group-hover:scale-100" />
+      <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-slate-50 dark:bg-slate-800/50 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 scale-50 group-hover:scale-100" />
     </button>
   );
 }
