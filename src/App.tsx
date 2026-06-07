@@ -4480,7 +4480,7 @@ export default function App() {
                       <div>
                         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mb-1.5">
                           <img 
-                            src={LOGO_14BPM_URL} 
+                            src="https://i.pinimg.com/originals/f6/7c/d6/f67cd60fb3862f17be0f3c3a61281b11.png" 
                             alt={`Brasão ${omeOrigem}`} 
                             className="h-7 w-auto object-contain rounded-lg bg-white px-2 py-0.5 shadow-sm group-hover:scale-103 transition-transform"
                             referrerPolicy="no-referrer"
