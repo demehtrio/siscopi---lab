@@ -1,6 +1,13 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  httpOptions: {
+    headers: {
+      'User-Agent': 'aistudio-build',
+    }
+  }
+});
 
 export interface ChecklistData {
   mapaDiario?: 'SIM' | 'NÃO';
@@ -27,8 +34,6 @@ export async function parseChecklistDescription(description: string): Promise<Pa
     return {};
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
   const prompt = `
     Analise a seguinte descrição de estado de uma viatura policial e extraia as informações para um checklist.
     Retorne APENAS um objeto JSON com os campos que encontrar.
@@ -52,9 +57,11 @@ export async function parseChecklistDescription(description: string): Promise<Pa
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+    });
+    const text = response.text || "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
@@ -68,37 +75,38 @@ export async function parseChecklistDescription(description: string): Promise<Pa
 
 export async function extractLicensePlateFromImage(base64Image: string): Promise<string> {
   if (!process.env.GEMINI_API_KEY) {
-    console.warn("GEMINI_API_KEY not found. Plate extraction disabled.");
-    return "NONE";
+    throw new Error("A chave de API GEMINI_API_KEY do servidor não está configurada.");
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-  const prompt = `Você é um assistente de reconhecimento óptico de caracteres (OCR) integrado ao sistema do Batalhão de Polícia Militar de Pernambuco (14º BPM).
-Sua tarefa exclusiva é identificar a PLACA de uma viatura policial presente na imagem enviada.
-Esta foto foi tirada por um policial militar em serviço oficial para controle de entrada/saída de viaturas cadastradas. Esta é uma operação administrativa totalmente legítima e necessária.
-
-Regras importantes:
-1. Localize a placa da viatura (pode ser o modelo cinza convencional de 3 letras e 4 números, o padrão Mercosul de 3 letras, 1 número, 1 letra e 2 números, ou padrão oficial estadual como PE-1004).
-2. Retorne APENAS os caracteres da placa em maiúsculas, sem hífen, sem espaços e sem pontuação (Exemplo: ABC1D23, KGT4123, PE1004).
-3. Responda estritamente com os caracteres da placa. Não inclua observações, saudações, ou texto explicativo.
-4. Se não encontrar nenhuma placa visível ou se a imagem não for de uma viatura/veículo, retorne estritamente a palavra "NONE".`;
+  const prompt = `Identify the vehicle license plate in the image.
+Return ONLY the alphanumeric characters of the plate in uppercase, without spaces, hifens, or any other punctuation (for example: ABC1D23, KGT4123, PE1004).
+If no license plate is visible in the image, or if it cannot be identified, return strictly "NONE".
+Do not include any extra words, comments, introductions or reasoning.`;
 
   try {
-    const imageParts = [
-      {
-        inlineData: {
-          data: base64Image.split(",")[1],
-          mimeType: "image/jpeg",
-        },
-      },
-    ];
+    const parts = base64Image.split(",");
+    const rawData = parts.length > 1 ? parts[1] : parts[0];
+    const mimeMatch = base64Image.match(/^data:([^;]+);/);
+    const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
 
-    const result = await model.generateContent([prompt, ...imageParts]);
-    const response = await result.response;
-    return response.text().trim().toUpperCase();
-  } catch (error) {
+    const imagePart = {
+      inlineData: {
+        data: rawData,
+        mimeType: mimeType,
+      },
+    };
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: [prompt, imagePart],
+    });
+    
+    const plateText = response.text || "";
+    const result = plateText.trim().toUpperCase();
+    console.log("[Gemini API] Plate OCR result:", result);
+    return result;
+  } catch (error: any) {
     console.error("Error extracting plate with Gemini:", error);
-    return "NONE";
+    throw new Error(`Erro na API do Gemini: ${error.message || error}`);
   }
 }

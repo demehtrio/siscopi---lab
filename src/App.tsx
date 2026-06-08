@@ -137,22 +137,17 @@ import {
   LUZES_TRASEIRAS
 } from './constants';
 const extractLicensePlateFromImage = async (base64Image: string): Promise<string> => {
-  try {
-    const response = await fetch("/api/extract-plate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ base64Image }),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-    const data = await response.json();
-    return data.plate || "NONE";
-  } catch (err) {
-    console.error("API error extracting license plate:", err);
-    return "NONE";
+  const response = await fetch("/api/extract-plate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ base64Image }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Erro de rede ou servidor (${response.status})`);
   }
+  const data = await response.json();
+  return data.plate || "NONE";
 };
 
 const parseChecklistDescription = async (description: string): Promise<any> => {
@@ -2505,6 +2500,19 @@ export default function App() {
           return;
         }
 
+        const matchPlateConfused = (char1: string, char2: string): boolean => {
+          if (char1 === char2) return true;
+          const confusions = [
+            ['1', 'I', 'L', 'J'],
+            ['0', 'O', 'Q', 'D'],
+            ['8', 'B', 'S', '5'],
+            ['2', 'Z'],
+            ['G', 'C', '6'],
+            ['U', 'V', 'Y']
+          ];
+          return confusions.some(group => group.includes(char1) && group.includes(char2));
+        };
+
         // Extremely robust vehicle finding:
         // Match 1: Exact or substring match (e.g. clean vehicle plate is inside Gemini results or vice versa)
         let vehicle = vehicles.find((v: any) => {
@@ -2524,6 +2532,37 @@ export default function App() {
               return vPlateClean === extractedPlate;
             });
           }
+        }
+
+        // Match 3: Fuzzy comparison based on OCR Confusions (tolerating up to 2 confused characters)
+        if (!vehicle) {
+          vehicle = vehicles.find((v: any) => {
+            const vPlateClean = (v.plate || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (!vPlateClean || vPlateClean.length !== 7) return false;
+
+            // Search for any 7-character continuous substring inside normalizedPlate with tolerance
+            for (let i = 0; i <= normalizedPlate.length - 7; i++) {
+              const sub = normalizedPlate.substring(i, i + 7);
+              let diffCount = 0;
+              let isAcceptable = true;
+              
+              for (let j = 0; j < 7; j++) {
+                if (sub[j] !== vPlateClean[j]) {
+                  diffCount++;
+                  const isConfused = matchPlateConfused(sub[j], vPlateClean[j]);
+                  if (!isConfused) {
+                    isAcceptable = false;
+                    break;
+                  }
+                }
+              }
+              if (isAcceptable && diffCount <= 2) {
+                console.log(`Fuzzy matched OCR plate substring ${sub} with registered vehicle plate ${vPlateClean} (differences: ${diffCount})`);
+                return true;
+              }
+            }
+            return false;
+          });
         }
         
         if (!vehicle) {
@@ -2556,9 +2595,9 @@ export default function App() {
       } else {
         addNotification("Não foi possível identificar a placa de viatura na foto.", "error");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error extracting plate:", error);
-      addNotification("Erro ao processar imagem.", "error");
+      addNotification(error.message || "Erro ao processar imagem para extração.", "error");
     } finally {
       setIsExtractingPlate(false);
       // Reset input value to allow scan of same file
