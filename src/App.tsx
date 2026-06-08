@@ -4206,7 +4206,7 @@ export default function App() {
         </aside>
 
         {/* Mobile Nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around p-2 z-50 shadow-2xl overflow-x-auto no-scrollbar transition-colors duration-300">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around p-2 z-[120] shadow-2xl overflow-x-auto no-scrollbar transition-colors duration-300">
           <MobileNavLink active={activeTab === 'dashboard'} onClick={() => { setActiveTab('dashboard'); setFormType(null); }} icon={<LayoutDashboard size={20} />} label="Início" />
           <MobileNavLink active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History size={20} />} label="Histórico" />
           <MobileNavLink active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} icon={<BarChart3 size={20} />} label="Relatórios" />
@@ -5112,7 +5112,7 @@ export default function App() {
                           </div>
 
                           {/* Comandante Section */}
-                          <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-6 relative z-[70]">
+                          <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-6 relative z-[35]">
                             <h3 className="font-bold text-blue-900">Comandante da Viatura</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div className="space-y-2">
@@ -5136,7 +5136,7 @@ export default function App() {
                           </div>
 
                           {/* Condutor Section */}
-                          <div className="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-6 relative z-[60]">
+                          <div className="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-6 relative z-[30]">
                             <div className="flex items-center justify-between">
                               <h3 className="font-bold text-emerald-900">Condutor</h3>
                               <label className="flex items-center gap-2 cursor-pointer group">
@@ -5207,7 +5207,7 @@ export default function App() {
                               <motion.div 
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
-                                className="p-6 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-6 relative z-[50]"
+                                className="p-6 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-6 relative z-[25]"
                               >
                                 <h3 className="font-bold text-orange-900">Patrulheiro 01</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -5249,7 +5249,7 @@ export default function App() {
                               <motion.div 
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
-                                className="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-6 relative z-[40]"
+                                className="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-6 relative z-[20]"
                               >
                                 <h3 className="font-bold text-slate-900">Patrulheiro 02</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -5291,7 +5291,7 @@ export default function App() {
                               <motion.div 
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
-                                className="p-6 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-6 relative z-[30]"
+                                className="p-6 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-6 relative z-[15]"
                               >
                                 <h3 className="font-bold text-orange-900">Patrulheiro 03</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -5333,7 +5333,7 @@ export default function App() {
                               <motion.div 
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
-                                className="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-6 relative z-[20]"
+                                className="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-6 relative z-[10]"
                               >
                                 <h3 className="font-bold text-slate-900">Patrulheiro 04</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -5375,7 +5375,7 @@ export default function App() {
                               <motion.div 
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
-                                className="p-6 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-6 relative z-[10]"
+                                className="p-6 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-6 relative z-[5]"
                               >
                                 <h3 className="font-bold text-orange-900">Patrulheiro 05</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
