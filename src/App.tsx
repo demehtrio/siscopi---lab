@@ -709,7 +709,7 @@ export default function App() {
     },
     drivers: {
       driverName: '',
-      serviceType: ''
+      serviceType: '14º BPM'
     },
     mileage: {
       currentMileage: '' as number | '',
@@ -1582,7 +1582,7 @@ export default function App() {
       },
       drivers: {
         driverName: (vehicle as any).currentDriver || '',
-        serviceType: (vehicle as any).currentServiceType || ''
+        serviceType: (vehicle as any).currentServiceType || omeOrigem || '14º BPM'
       },
       mileage: {
         currentMileage: '',
