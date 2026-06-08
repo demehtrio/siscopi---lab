@@ -1957,16 +1957,29 @@ export default function App() {
 
   const handleWhatsAppShare = (record: RecordEntry) => {
     const message = formatWhatsAppMessage(record);
-    // Use the official universal link which is more robust across platforms than wa.me
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    const encodedMessage = encodeURIComponent(message);
     
     // Check if we're on mobile to use a direct redirect approach which triggers app intents better
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    // Using custom URL scheme 'whatsapp://' directly on mobile bypasses the "install app" landing page 
+    // and triggers the installed app immediately. If not on mobile, we use api.whatsapp.com
+    const whatsappUrl = isMobile
+      ? `whatsapp://send?text=${encodedMessage}`
+      : `https://api.whatsapp.com/send?text=${encodedMessage}`;
     
     if (isMobile) {
       // On mobile, direct assignment is much better for triggering native app intents
       // without being blocked by popup blockers or stuck in a broken new tab
       window.location.href = whatsappUrl;
+      
+      // Fallback: If the deep link protocol is not handled or takes time (e.g., if WhatsApp isn't installed),
+      // we can redirect to the official api.whatsapp.com URL after a small delay.
+      setTimeout(() => {
+        if (document.hasFocus()) {
+          window.location.href = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+        }
+      }, 1500);
     } else {
       try {
         const w = window.open(whatsappUrl, '_blank');
