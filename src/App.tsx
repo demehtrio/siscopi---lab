@@ -4073,7 +4073,7 @@ export default function App() {
             <div className="p-6 flex items-center gap-3">
               <div className="bg-white p-1.5 rounded-xl shadow-inner">
                 <SafeImage 
-                  src={autovisionLogo} 
+                  src={ASSETS.LOGO_14BPM} 
                   alt={`Logo ${omeOrigem}`} 
                   className="w-12 h-12 object-contain" 
                   width={48}
