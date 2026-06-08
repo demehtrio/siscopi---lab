@@ -2461,9 +2461,35 @@ export default function App() {
       const plate = await extractLicensePlateFromImage(base64String);
       if (plate && plate !== 'NONE') {
         const normalizedPlate = plate.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        
-        // Find vehicle in system
-        const vehicle = vehicles.find((v: any) => v.plate.replace(/[^A-Z0-9]/g, '').toUpperCase() === normalizedPlate);
+        console.log("Plate extraction raw response:", plate, "Normalized:", normalizedPlate);
+
+        if (!normalizedPlate || normalizedPlate.length < 3) {
+          addNotification("Não foi possível identificar uma placa válida na foto.", "error");
+          setIsExtractingPlate(false);
+          e.target.value = '';
+          return;
+        }
+
+        // Extremely robust vehicle finding:
+        // Match 1: Exact or substring match (e.g. clean vehicle plate is inside Gemini results or vice versa)
+        let vehicle = vehicles.find((v: any) => {
+          const vPlateClean = (v.plate || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+          if (!vPlateClean) return false;
+          return normalizedPlate.includes(vPlateClean) || vPlateClean.includes(normalizedPlate);
+        });
+
+        // Match 2: Try to find standard 7-character Brazilian plate structure (traditional or Mercosul) inside the cleaned Gemini output
+        if (!vehicle) {
+          const plateRegex = /[A-Z]{3}[0-9][A-Z0-9][0-9]{2}/g;
+          const matches = normalizedPlate.match(plateRegex);
+          if (matches && matches.length > 0) {
+            const extractedPlate = matches[0];
+            vehicle = vehicles.find((v: any) => {
+              const vPlateClean = (v.plate || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+              return vPlateClean === extractedPlate;
+            });
+          }
+        }
         
         if (!vehicle) {
           // Warning state for unregistered vehicle

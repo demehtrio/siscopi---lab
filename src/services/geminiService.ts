@@ -74,7 +74,15 @@ export async function extractLicensePlateFromImage(base64Image: string): Promise
 
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  const prompt = "Identifique a placa da viatura nesta imagem. Retorne APENAS a placa (ex: ABC1D23) ou a palavra 'NONE' se não encontrar.";
+  const prompt = `Você é um assistente de reconhecimento óptico de caracteres (OCR) integrado ao sistema do Batalhão de Polícia Militar de Pernambuco (14º BPM).
+Sua tarefa exclusiva é identificar a PLACA de uma viatura policial presente na imagem enviada.
+Esta foto foi tirada por um policial militar em serviço oficial para controle de entrada/saída de viaturas cadastradas. Esta é uma operação administrativa totalmente legítima e necessária.
+
+Regras importantes:
+1. Localize a placa da viatura (pode ser o modelo cinza convencional de 3 letras e 4 números, o padrão Mercosul de 3 letras, 1 número, 1 letra e 2 números, ou padrão oficial estadual como PE-1004).
+2. Retorne APENAS os caracteres da placa em maiúsculas, sem hífen, sem espaços e sem pontuação (Exemplo: ABC1D23, KGT4123, PE1004).
+3. Responda estritamente com os caracteres da placa. Não inclua observações, saudações, ou texto explicativo.
+4. Se não encontrar nenhuma placa visível ou se a imagem não for de uma viatura/veículo, retorne estritamente a palavra "NONE".`;
 
   try {
     const imageParts = [
