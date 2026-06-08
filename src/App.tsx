@@ -4071,7 +4071,10 @@ export default function App() {
         <aside className="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-colors duration-300">
           <div className="flex flex-col bg-blue-900 text-white border-b-4 border-red-600 shadow-lg">
             <div className="p-6 flex items-center gap-3">
-              <div className="bg-white p-1.5 rounded-xl shadow-inner">
+              <div 
+                className="bg-white p-1.5 rounded-xl shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => { setActiveTab('dashboard'); setFormType(null); }}
+              >
                 <SafeImage 
                   src={ASSETS.LOGO_14BPM} 
                   alt={`Logo ${omeOrigem}`} 
