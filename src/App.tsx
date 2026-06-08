@@ -136,7 +136,42 @@ import {
   PARTES_EXTERNAS,
   LUZES_TRASEIRAS
 } from './constants';
-import { parseChecklistDescription, extractLicensePlateFromImage } from './services/geminiService';
+const extractLicensePlateFromImage = async (base64Image: string): Promise<string> => {
+  try {
+    const response = await fetch("/api/extract-plate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ base64Image }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    }
+    const data = await response.json();
+    return data.plate || "NONE";
+  } catch (err) {
+    console.error("API error extracting license plate:", err);
+    return "NONE";
+  }
+};
+
+const parseChecklistDescription = async (description: string): Promise<any> => {
+  try {
+    const response = await fetch("/api/parse-checklist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ description }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    }
+    return await response.json();
+  } catch (err) {
+    console.error("API error parsing checklist description:", err);
+    return {};
+  }
+};
 import { Vehicle, RecordEntry, UserProfile, ChecklistData, AppNotification } from './types';
 
 // --- Constants ---
