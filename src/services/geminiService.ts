@@ -1,13 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    }
-  }
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export interface ChecklistData {
   mapaDiario?: 'SIM' | 'NÃO';
@@ -34,6 +27,8 @@ export async function parseChecklistDescription(description: string): Promise<Pa
     return {};
   }
 
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
   const prompt = `
     Analise a seguinte descrição de estado de uma viatura policial e extraia as informações para um checklist.
     Retorne APENAS um objeto JSON com os campos que encontrar.
@@ -57,11 +52,9 @@ export async function parseChecklistDescription(description: string): Promise<Pa
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-    });
-    const text = response.text || "";
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
@@ -75,38 +68,29 @@ export async function parseChecklistDescription(description: string): Promise<Pa
 
 export async function extractLicensePlateFromImage(base64Image: string): Promise<string> {
   if (!process.env.GEMINI_API_KEY) {
-    throw new Error("A chave de API GEMINI_API_KEY do servidor não está configurada.");
+    console.warn("GEMINI_API_KEY not found. Plate extraction disabled.");
+    return "NONE";
   }
 
-  const prompt = `Identify the vehicle license plate in the image.
-Return ONLY the alphanumeric characters of the plate in uppercase, without spaces, hifens, or any other punctuation (for example: ABC1D23, KGT4123, PE1004).
-If no license plate is visible in the image, or if it cannot be identified, return strictly "NONE".
-Do not include any extra words, comments, introductions or reasoning.`;
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const prompt = "Identifique a placa da viatura nesta imagem. Retorne APENAS a placa (ex: ABC1D23) ou a palavra 'NONE' se não encontrar.";
 
   try {
-    const parts = base64Image.split(",");
-    const rawData = parts.length > 1 ? parts[1] : parts[0];
-    const mimeMatch = base64Image.match(/^data:([^;]+);/);
-    const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
-
-    const imagePart = {
-      inlineData: {
-        data: rawData,
-        mimeType: mimeType,
+    const imageParts = [
+      {
+        inlineData: {
+          data: base64Image.split(",")[1],
+          mimeType: "image/jpeg",
+        },
       },
-    };
+    ];
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: [prompt, imagePart],
-    });
-    
-    const plateText = response.text || "";
-    const result = plateText.trim().toUpperCase();
-    console.log("[Gemini API] Plate OCR result:", result);
-    return result;
-  } catch (error: any) {
+    const result = await model.generateContent([prompt, ...imageParts]);
+    const response = await result.response;
+    return response.text().trim().toUpperCase();
+  } catch (error) {
     console.error("Error extracting plate with Gemini:", error);
-    throw new Error(`Erro na API do Gemini: ${error.message || error}`);
+    return "NONE";
   }
 }

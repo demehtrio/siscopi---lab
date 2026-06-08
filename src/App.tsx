@@ -136,37 +136,7 @@ import {
   PARTES_EXTERNAS,
   LUZES_TRASEIRAS
 } from './constants';
-const extractLicensePlateFromImage = async (base64Image: string): Promise<string> => {
-  const response = await fetch("/api/extract-plate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ base64Image }),
-  });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `Erro de rede ou servidor (${response.status})`);
-  }
-  const data = await response.json();
-  return data.plate || "NONE";
-};
-
-const parseChecklistDescription = async (description: string): Promise<any> => {
-  try {
-    const response = await fetch("/api/parse-checklist", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ description }),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-    return await response.json();
-  } catch (err) {
-    console.error("API error parsing checklist description:", err);
-    return {};
-  }
-};
+import { parseChecklistDescription, extractLicensePlateFromImage } from './services/geminiService';
 import { Vehicle, RecordEntry, UserProfile, ChecklistData, AppNotification } from './types';
 
 // --- Constants ---
@@ -728,8 +698,6 @@ export default function App() {
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
   const [clearingHistory, setClearingHistory] = useState(false);
   const [isExtractingPlate, setIsExtractingPlate] = useState(false);
-  const [unregisteredPlateScanned, setUnregisteredPlateScanned] = useState<string | null>(null);
-  const [scannedVehicle, setScannedVehicle] = useState<Vehicle | null>(null);
   const [cadastroVtrFormData, setCadastroVtrFormData] = useState<any>({
     identification: {
       prefix: '',
@@ -2491,117 +2459,37 @@ export default function App() {
       const plate = await extractLicensePlateFromImage(base64String);
       if (plate && plate !== 'NONE') {
         const normalizedPlate = plate.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        console.log("Plate extraction raw response:", plate, "Normalized:", normalizedPlate);
-
-        if (!normalizedPlate || normalizedPlate.length < 3) {
-          addNotification("Não foi possível identificar uma placa válida na foto.", "error");
-          setIsExtractingPlate(false);
-          e.target.value = '';
-          return;
-        }
-
-        const matchPlateConfused = (char1: string, char2: string): boolean => {
-          if (char1 === char2) return true;
-          const confusions = [
-            ['1', 'I', 'L', 'J'],
-            ['0', 'O', 'Q', 'D'],
-            ['8', 'B', 'S', '5'],
-            ['2', 'Z'],
-            ['G', 'C', '6'],
-            ['U', 'V', 'Y']
-          ];
-          return confusions.some(group => group.includes(char1) && group.includes(char2));
-        };
-
-        // Extremely robust vehicle finding:
-        // Match 1: Exact or substring match (e.g. clean vehicle plate is inside Gemini results or vice versa)
-        let vehicle = vehicles.find((v: any) => {
-          const vPlateClean = (v.plate || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-          if (!vPlateClean) return false;
-          return normalizedPlate.includes(vPlateClean) || vPlateClean.includes(normalizedPlate);
-        });
-
-        // Match 2: Try to find standard 7-character Brazilian plate structure (traditional or Mercosul) inside the cleaned Gemini output
-        if (!vehicle) {
-          const plateRegex = /[A-Z]{3}[0-9][A-Z0-9][0-9]{2}/g;
-          const matches = normalizedPlate.match(plateRegex);
-          if (matches && matches.length > 0) {
-            const extractedPlate = matches[0];
-            vehicle = vehicles.find((v: any) => {
-              const vPlateClean = (v.plate || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-              return vPlateClean === extractedPlate;
-            });
+        
+        // Find vehicle
+        const vehicle = vehicles.find((v: any) => v.plate.replace(/[^A-Z0-9]/g, '').toUpperCase() === normalizedPlate);
+        
+        setCadastroVtrFormData((prev: any) => ({ 
+          ...prev, 
+          identification: {
+            ...prev.identification,
+            plate: normalizedPlate,
+            prefix: vehicle?.prefix || prev.identification.prefix,
+            model: vehicle?.model || prev.identification.model
+          },
+          checklist: {
+            ...(prev.checklist || {}),
+            fotos: [...(prev.checklist?.fotos || []), base64String]
           }
-        }
-
-        // Match 3: Fuzzy comparison based on OCR Confusions (tolerating up to 2 confused characters)
-        if (!vehicle) {
-          vehicle = vehicles.find((v: any) => {
-            const vPlateClean = (v.plate || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-            if (!vPlateClean || vPlateClean.length !== 7) return false;
-
-            // Search for any 7-character continuous substring inside normalizedPlate with tolerance
-            for (let i = 0; i <= normalizedPlate.length - 7; i++) {
-              const sub = normalizedPlate.substring(i, i + 7);
-              let diffCount = 0;
-              let isAcceptable = true;
-              
-              for (let j = 0; j < 7; j++) {
-                if (sub[j] !== vPlateClean[j]) {
-                  diffCount++;
-                  const isConfused = matchPlateConfused(sub[j], vPlateClean[j]);
-                  if (!isConfused) {
-                    isAcceptable = false;
-                    break;
-                  }
-                }
-              }
-              if (isAcceptable && diffCount <= 2) {
-                console.log(`Fuzzy matched OCR plate substring ${sub} with registered vehicle plate ${vPlateClean} (differences: ${diffCount})`);
-                return true;
-              }
-            }
-            return false;
-          });
-        }
+        }));
         
         if (!vehicle) {
-          // Warning state for unregistered vehicle
-          setUnregisteredPlateScanned(normalizedPlate);
-          addNotification(`Alerta: placa ${normalizedPlate} não está cadastrada na frota.`, "error");
+          addNotification(`Placa ${normalizedPlate} identificada, mas não encontrada na frota.`, "info");
         } else {
           addNotification(`Viatura ${vehicle.prefix} identificada!`, "success");
-          
-          if (cadastroVtrView === 'list') {
-            // Offer instant actions (Saída or Retorno) in list view
-            setScannedVehicle(vehicle);
-          } else {
-            // Fill form data
-            setCadastroVtrFormData((prev: any) => ({ 
-              ...prev, 
-              identification: {
-                ...prev.identification,
-                plate: vehicle.plate,
-                prefix: vehicle.prefix,
-                model: vehicle.model
-              },
-              checklist: {
-                ...(prev.checklist || {}),
-                fotos: [...(prev.checklist?.fotos || []), base64String]
-              }
-            }));
-          }
         }
       } else {
-        addNotification("Não foi possível identificar a placa de viatura na foto.", "error");
+        addNotification("Não foi possível identificar a placa.", "error");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error extracting plate:", error);
-      addNotification(error.message || "Erro ao processar imagem para extração.", "error");
+      addNotification("Erro ao processar imagem.", "error");
     } finally {
       setIsExtractingPlate(false);
-      // Reset input value to allow scan of same file
-      e.target.value = '';
     }
   };
   const [hasPatrulheiro01, setHasPatrulheiro01] = useState(false);
@@ -6128,141 +6016,6 @@ export default function App() {
           ))}
         </AnimatePresence>
       </div>
-
-      {/* Plate Scanner Modals */}
-      <AnimatePresence>
-        {unregisteredPlateScanned && (
-          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"
-            >
-              <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-red-50">
-                <div className="flex items-center gap-3">
-                  <div className="bg-red-100 p-2 rounded-xl text-red-600">
-                    <ShieldAlert size={24} />
-                  </div>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                    Placa Não Cadastrada!
-                  </h3>
-                </div>
-                <button onClick={() => setUnregisteredPlateScanned(null)} className="p-2 text-slate-400 hover:text-slate-600 rounded-xl"><X size={24} /></button>
-              </div>
-              <div className="p-8 space-y-6">
-                <div className="p-4 bg-red-50/50 rounded-2xl border border-red-100 text-center">
-                  <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1 font-sans">Placa Identificada</p>
-                  <p className="text-3xl font-mono font-black text-red-600 tracking-wider">
-                    {unregisteredPlateScanned.replace(/([A-Z]{3})(\d[A-Z0-9]\d{2})/, '$1-$2')}
-                  </p>
-                </div>
-
-                <p className="text-slate-500 text-sm leading-relaxed font-semibold">
-                  A placa acima foi identificada na imagem, mas <span className="font-black text-slate-900">não está cadastrada na frota do sistema</span> do 14º BPM. 
-                  <br /><br />
-                  Por segurança, apenas viaturas cadastradas e homologadas pela corporação são autorizadas para registro de entrada e saída.
-                </p>
-
-                <div className="flex gap-3 pt-2">
-                  <button 
-                    onClick={() => setUnregisteredPlateScanned(null)}
-                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all text-center"
-                  >
-                    Entendi e Fechar
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {scannedVehicle && (
-          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"
-            >
-              <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-emerald-50">
-                <div className="flex items-center gap-3">
-                  <div className="bg-emerald-100 p-2 rounded-xl text-emerald-600">
-                    <CheckCircle2 size={24} />
-                  </div>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                    Viatura Identificada!
-                  </h3>
-                </div>
-                <button onClick={() => setScannedVehicle(null)} className="p-2 text-slate-400 hover:text-slate-600 rounded-xl"><X size={24} /></button>
-              </div>
-              <div className="p-8 space-y-6">
-                <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Patrimônio / Prefixo</span>
-                    <span className="font-mono font-black text-slate-800 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-sm">{scannedVehicle.prefix}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Modelo</span>
-                    <span className="font-bold text-slate-700 text-sm">{scannedVehicle.model}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Placa</span>
-                    <span className="font-mono font-black text-blue-600 text-sm">{scannedVehicle.plate}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status Atual</span>
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
-                      scannedVehicle.status === 'available' ? 'bg-emerald-100 text-emerald-700' :
-                      scannedVehicle.status === 'in_use' ? 'bg-blue-100 text-blue-700' :
-                      'bg-amber-100 text-amber-700'
-                    }`}>
-                      {scannedVehicle.status === 'available' ? 'Livre' :
-                       scannedVehicle.status === 'in_use' ? 'Em Uso' : 'Baixa'}
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-slate-500 text-sm leading-relaxed font-semibold text-center">
-                  O que você deseja registrar para esta viatura?
-                </p>
-
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                  <button 
-                    onClick={() => {
-                      const v = scannedVehicle;
-                      setScannedVehicle(null);
-                      handleStartCadastroVtrRecord(v, 'check-out');
-                    }}
-                    disabled={scannedVehicle.status === 'maintenance'}
-                    className="py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm shadow-lg shadow-emerald-500/15"
-                  >
-                    Registrar Saída
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const v = scannedVehicle;
-                      setScannedVehicle(null);
-                      handleStartCadastroVtrRecord(v, 'check-in');
-                    }}
-                    disabled={scannedVehicle.status === 'maintenance'}
-                    className="py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm shadow-lg shadow-blue-500/15"
-                  >
-                    Registrar Retorno
-                  </button>
-                </div>
-                <button 
-                  onClick={() => setScannedVehicle(null)}
-                  className="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-650 rounded-2xl font-bold transition-all text-xs"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
     </ErrorBoundary>
   );
 }
@@ -8059,29 +7812,6 @@ function CadastroVTR({
                               options={vehicles.map((v: Vehicle) => v.plate)}
                               placeholder="Selecione a placa..."
                               variant="blue"
-                              rightElement={
-                                <label className="text-xs font-black text-blue-600 hover:text-blue-700 cursor-pointer flex items-center gap-1 active:scale-95 transition-all">
-                                  {isExtractingPlate ? (
-                                    <>
-                                      <Loader2 className="animate-spin size-3 text-blue-600" />
-                                      <span>Leitor...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Camera size={12} className="text-blue-600" />
-                                      <span>Escanear</span>
-                                    </>
-                                  )}
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    capture="environment"
-                                    className="hidden"
-                                    onChange={onExtractPlate}
-                                    disabled={isExtractingPlate}
-                                  />
-                                </label>
-                              }
                             />
                           </div>
                           <div className="space-y-2">
@@ -8294,7 +8024,7 @@ function CadastroVTR({
             </div>
 
             {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 items-stretch sm:items-center">
+            <div className="flex flex-col lg:flex-row gap-4 bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 <input 
@@ -8305,23 +8035,6 @@ function CadastroVTR({
                   className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
                 />
               </div>
-              
-              <label className="cursor-pointer flex items-center justify-center gap-2 px-6 py-4 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-2xl border border-blue-100 font-bold transition-all shrink-0 active:scale-95 group">
-                {isExtractingPlate ? (
-                  <Loader2 className="animate-spin size-5 text-blue-600" />
-                ) : (
-                  <Camera className="size-5 text-blue-600 group-hover:scale-110 transition-transform" />
-                )}
-                <span>Escaneador de Placa</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={onExtractPlate}
-                  disabled={isExtractingPlate}
-                />
-              </label>
             </div>
 
             {/* Vehicle Grid */}
