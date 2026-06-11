@@ -881,11 +881,19 @@ export default function App() {
       const list: AppNotification[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        list.push({ 
-          id: doc.id, 
-          ...data,
-          timestamp: data.timestamp
-        } as AppNotification);
+        const titleLower = (data.title || '').toLowerCase();
+        // Skip operation category (saída/entrada) and specific checklist warnings/predictive alerts
+        const isFromVtrReg = data.category === 'operation' || 
+                            titleLower.includes('defeito reportado') || 
+                            titleLower.includes('manutenção preditiva');
+        
+        if (!isFromVtrReg) {
+          list.push({ 
+            id: doc.id, 
+            ...data,
+            timestamp: data.timestamp
+          } as AppNotification);
+        }
       });
       setPersistentNotifications(list);
     }, (error) => {
@@ -2054,22 +2062,6 @@ export default function App() {
         setVehicles(updatedVehicles);
         localStorage.setItem('siscopi_vehicles', JSON.stringify(updatedVehicles));
 
-        // 3. Update notifications
-        const newNotif = {
-          id: `local-notif-${Date.now()}`,
-          title: operationType === 'check-out' ? 'Saída de Viatura' : 'Entrada de Viatura',
-          message: `${operationType === 'check-out' ? 'Saída' : 'Entrada'} da viatura ${selectedVehicle.prefix} (${selectedVehicle.plate}) registrada por ${user.displayName || user.email?.split('@')[0]}.`,
-          type: 'success',
-          targetUser: 'all',
-          category: 'operation',
-          vehicleId: selectedVehicle.id,
-          timestamp: new Date().toISOString(),
-          read: false
-        } as any;
-        const updatedNotifications = [newNotif, ...persistentNotifications];
-        setPersistentNotifications(updatedNotifications);
-        localStorage.setItem('siscopi_notifications', JSON.stringify(updatedNotifications));
-
         addNotification("Registro de VTR salvo com sucesso!", "success");
 
         if (!skipWhatsApp) {
@@ -2138,50 +2130,6 @@ export default function App() {
         updatedAt: serverTimestamp()
       };
       batch.update(vehicleRef, vehicleUpdate);
-
-      // 3. Create persistent notification for operation completion (via batch too!)
-      const operationNotifRef = doc(collection(db, 'notifications'));
-      batch.set(operationNotifRef, {
-        title: operationType === 'check-out' ? 'Saída de Viatura' : 'Entrada de Viatura',
-        message: `${operationType === 'check-out' ? 'Saída' : 'Entrada'} da viatura ${selectedVehicle.prefix} (${selectedVehicle.plate}) registrada por ${user.displayName || user.email?.split('@')[0]}.`,
-        type: 'success',
-        targetUser: 'all',
-        category: 'operation',
-        vehicleId: selectedVehicle.id,
-        timestamp: serverTimestamp(),
-        read: false
-      });
-
-      // 4. Alert if there are issues in checklist
-      if (cadastroVtrFormData.checklist?.arCondicionado === 'COM DEFEITO') {
-        const issueNotifRef = doc(collection(db, 'notifications'));
-        batch.set(issueNotifRef, {
-          title: 'Defeito Reportado: Ar Condicionado',
-          message: `Ar Condicionado da viatura ${selectedVehicle.prefix} reportado COM DEFEITO no checklist.`,
-          type: 'warning',
-          targetUser: 'all',
-          category: 'maintenance',
-          vehicleId: selectedVehicle.id,
-          timestamp: serverTimestamp(),
-          read: false
-        });
-      }
-
-      // 5. Check for maintenance based on mileage threshold
-      const nextOilChange = Number(cadastroVtrFormData.checklist?.proxTrocaOleoKm);
-      if (!isNaN(nextOilChange) && nextOilChange > 0 && mileageVal >= nextOilChange) {
-        const maintNotifRef = doc(collection(db, 'notifications'));
-        batch.set(maintNotifRef, {
-          title: 'Manutenção Preditiva: Troca de Óleo',
-          message: `Viatura ${selectedVehicle.prefix} atingiu a quilometragem para troca de óleo (${mileageVal}km >= ${nextOilChange}km).`,
-          type: 'error',
-          targetUser: 'all',
-          category: 'maintenance',
-          vehicleId: selectedVehicle.id,
-          timestamp: serverTimestamp(),
-          read: false
-        });
-      }
 
       // Execute all together
       await batch.commit();
@@ -2902,7 +2850,14 @@ export default function App() {
     const localNotifs = localStorage.getItem('siscopi_notifications');
     if (localNotifs) {
       try {
-        setPersistentNotifications(JSON.parse(localNotifs));
+        const parsed = JSON.parse(localNotifs);
+        const filtered = Array.isArray(parsed) ? parsed.filter((notif: any) => {
+          const titleLower = (notif.title || '').toLowerCase();
+          return !(notif.category === 'operation' || 
+                   titleLower.includes('defeito reportado') || 
+                   titleLower.includes('manutenção preditiva'));
+        }) : [];
+        setPersistentNotifications(filtered);
       } catch (e) {
         console.error("Error parsing local notifications:", e);
       }
