@@ -4115,14 +4115,6 @@ export default function App() {
                 label="Configurações"
               />
             )}
-            <div className="h-px bg-slate-100 my-4 mx-2"></div>
-            <SidebarLink 
-              active={isNotificationCenterOpen} 
-              onClick={() => setIsNotificationCenterOpen(true)}
-              icon={<Bell size={20} />}
-              label="Notificações"
-              badge={persistentNotifications.filter(n => !n.read).length > 0 ? String(persistentNotifications.filter(n => !n.read).length) : undefined}
-            />
           </nav>
 
           <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
@@ -4222,17 +4214,6 @@ export default function App() {
               title={theme === 'light' ? "Mudar para tema escuro" : "Mudar para tema claro"}
             >
               {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-            </button>
-            <button 
-              onClick={() => setIsNotificationCenterOpen(true)}
-              className="relative p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-            >
-              <Bell size={20} />
-              {persistentNotifications.filter(n => !n.read).length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-blue-900 animate-pulse">
-                  {persistentNotifications.filter(n => !n.read).length}
-                </span>
-              )}
             </button>
             <img 
               src={(user.photoURL && user.photoURL.trim() !== "") ? user.photoURL : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`} 
