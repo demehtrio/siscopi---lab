@@ -94,7 +94,8 @@ import {
   ArrowRight,
   ArrowLeft,
   Sun,
-  Moon
+  Moon,
+  Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { jsPDF } from 'jspdf';
@@ -4528,6 +4529,48 @@ export default function App() {
                       >
                         <span>Acessar AUTOVISION</span>
                         <ExternalLink size={12} className="group-hover/btn_autovision:translate-x-0.5 group-hover/btn_autovision:-translate-y-0.5 transition-transform" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Banner E-MAIL INSTITUCIONAL */}
+                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
+                    {/* Decorative background visual elements */}
+                    <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
+                    
+                    <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                      <div>
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mb-1.5">
+                          <img 
+                            src="https://www.pm.pe.gov.br/wp-content/uploads/2020/01/cropped-logo-pmpe-150x150.png" 
+                            alt="E-mail Institucional" 
+                            className="h-7 w-auto object-contain rounded-lg bg-white px-2 py-0.5 shadow-sm group-hover:scale-103 transition-transform"
+                            referrerPolicy="no-referrer"
+                          />
+                          <span className="text-[8px] font-black bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                            <Mail size={10} />
+                            E-mail
+                          </span>
+                        </div>
+                        <p className="text-slate-300 text-xs font-medium max-w-xl leading-relaxed">
+                          E-mail Institucional PMPE - <strong>@pm.pe.gov.br</strong>
+                        </p>
+                        <p className="text-slate-400 text-[11px] font-semibold mt-0.5 flex items-center justify-center sm:justify-start gap-1">
+                          <Info className="size-3 text-blue-400 shrink-0" />
+                          <span>Para acessar digite o login e a senha usada no SEI.</span>
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="relative z-10 w-full md:w-auto shrink-0">
+                      <a 
+                        href="https://sogo.pe.gov.br/SOGo/so/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="w-full md:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl shadow-md shadow-blue-600/10 hover:shadow-blue-600/25 transition-all text-center flex items-center justify-center gap-1.5 active:scale-98 group/btn_email text-xs"
+                      >
+                        <span>Acessar E-mail Institucional</span>
+                        <ExternalLink size={12} className="group-hover/btn_email:translate-x-0.5 group-hover/btn_email:-translate-y-0.5 transition-transform" />
                       </a>
                     </div>
                   </div>
