@@ -4283,8 +4283,8 @@ export default function App() {
                   </div>
                 </header>
 
-                {/* Banners Individuais: Polícia Ágil & Dentro do QSH */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Banners Individuais: Polícia Ágil, Dentro do QSH & e-COP */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
                   {/* Banner Polícia Ágil */}
                   <div className="p-6 bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-950 text-white rounded-[2.5rem] border border-blue-800/50 shadow-2xl overflow-hidden relative flex flex-col justify-between gap-6 group">
                     {/* Decorative background visual elements */}
@@ -4360,6 +4360,50 @@ export default function App() {
                         <span>Acessar Dentro do QSH</span>
                         <ChevronRight size={14} className="group-hover/btn_qsh:translate-x-0.5 transition-transform" />
                       </button>
+                    </div>
+                  </div>
+
+                  {/* Banner e-COP */}
+                  <div className="p-6 bg-gradient-to-br from-emerald-950 via-teal-900 to-cyan-950 text-white rounded-[2.5rem] border border-emerald-800/30 shadow-2xl overflow-hidden relative flex flex-col justify-between gap-6 group">
+                    {/* Decorative background visual elements */}
+                    <div className="absolute top-0 right-0 p-16 bg-emerald-500/10 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-emerald-500/15 transition-all duration-500"></div>
+                    
+                    <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center border border-white/20 shadow-md overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-300 p-2">
+                        <SafeImage 
+                          src="https://www.pm.pe.gov.br/wp-content/uploads/2020/01/cropped-logo-pmpe-150x150.png" 
+                          alt="e-COP Logo" 
+                          className="w-full h-full object-contain" 
+                          width={56} 
+                          height={56} 
+                          icon={ShieldCheck} 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                          <h3 className="text-xl font-black tracking-tight text-white">e-COP</h3>
+                          <span className="text-[9px] font-black bg-amber-500/25 border border-amber-500/30 text-amber-300 px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">Em Breve</span>
+                          <span className="text-[9px] font-black bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full uppercase tracking-wider">PMPE</span>
+                        </div>
+                        <p className="text-emerald-200/85 text-xs sm:text-sm font-medium leading-relaxed">
+                          e-COP - Coordenação de Operações Policiais
+                        </p>
+                        <p className="text-emerald-300/80 text-[11px] font-medium leading-relaxed mt-0.5">
+                          Para acessar digite o login e a senha usada no SEI.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="relative z-10 w-full sm:w-auto self-end">
+                      <a 
+                        href="https://ecop.sistemas.pm.pe.gov.br/#" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/25 transition-all text-center flex items-center justify-center gap-2 active:scale-98 group/btn_ecop text-sm opacity-90 hover:opacity-100"
+                      >
+                        <span>Acessar e-COP</span>
+                        <ExternalLink size={14} className="group-hover/btn_ecop:translate-x-0.5 group-hover/btn_ecop:-translate-y-0.5 transition-transform" />
+                      </a>
                     </div>
                   </div>
                 </div>
