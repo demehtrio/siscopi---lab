@@ -666,6 +666,8 @@ export default function App() {
   
   // --- Cadastro VTR State ---
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [standaloneHistoryLimit, setStandaloneHistoryLimit] = useState(10);
+  const [cadastroVtrHistoryLimit, setCadastroVtrHistoryLimit] = useState(10);
   const [cadastroVtrHistory, setCadastroVtrHistory] = useState<RecordEntry[]>([]);
   const [standaloneHistory, setStandaloneHistory] = useState<RecordEntry[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
@@ -797,17 +799,17 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     if (isLocalMode) return;
-    const constraints: any[] = [orderBy('timestamp', 'desc'), limit(50)];
+    const constraints: any[] = [orderBy('timestamp', 'desc'), limit(standaloneHistoryLimit)];
     
     const q = query(collection(db, 'standalone_checklists'), ...constraints);
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const historyData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setStandaloneHistory(historyData);
+       const historyData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+       setStandaloneHistory(historyData);
     }, (error) => {
-      console.warn("Offline or Firestore subscription info: Error fetching standalone checklists:", error);
+       console.warn("Offline or Firestore subscription info: Error fetching standalone checklists:", error);
     });
     return () => unsubscribe();
-  }, [user, isAdmin]);
+  }, [user, isAdmin, standaloneHistoryLimit]);
 
   // Bootstrap vehicles if empty or settings updated and user is admin
   useEffect(() => {
@@ -825,7 +827,7 @@ export default function App() {
     if (!user || activeTab !== 'cadastro_vtr' || cadastroVtrView !== 'history') return;
     if (isLocalMode) return;
     
-    const constraints: any[] = [orderBy('timestamp', 'desc'), limit(50)];
+    const constraints: any[] = [orderBy('timestamp', 'desc'), limit(cadastroVtrHistoryLimit)];
     
     const q = query(
       collection(db, 'checklists'), 
@@ -842,7 +844,7 @@ export default function App() {
       console.error("Error fetching Cadastro VTR history:", error);
     });
     return () => unsubscribe();
-  }, [user, activeTab, cadastroVtrView, isAdmin]);
+  }, [user, activeTab, cadastroVtrView, isAdmin, cadastroVtrHistoryLimit]);
 
   // Admin users listener (for Cadastro VTR admin view)
   useEffect(() => {
@@ -5932,6 +5934,8 @@ export default function App() {
                   isAdmin={isAdmin}
                   vehicles={vehicles}
                   history={cadastroVtrHistory}
+                  hasMore={cadastroVtrHistory.length === cadastroVtrHistoryLimit}
+                  onLoadMore={() => setCadastroVtrHistoryLimit(prev => prev + 10)}
                   selectedVehicle={selectedVehicle}
                   operationType={operationType}
                   view={cadastroVtrView}
@@ -5997,6 +6001,8 @@ export default function App() {
                   onResendWhatsApp={handleResendWhatsApp}
                   onSaveStandalone={handleSaveStandaloneChecklist}
                   history={standaloneHistory}
+                  hasMore={standaloneHistory.length === standaloneHistoryLimit}
+                  onLoadMore={() => setStandaloneHistoryLimit(prev => prev + 10)}
                 />
               </motion.div>
             )}
@@ -6855,7 +6861,9 @@ function ChecklistModule({
   onGenerateDetailedPDF,
   onResendWhatsApp,
   onSaveStandalone,
-  history
+  history,
+  hasMore,
+  onLoadMore
 }: {
   user: User | null;
   vehicles: Vehicle[];
@@ -6872,6 +6880,8 @@ function ChecklistModule({
   onResendWhatsApp: (record: RecordEntry) => void;
   onSaveStandalone: (formData: any, skipWhatsApp?: boolean) => Promise<boolean>;
   history: RecordEntry[];
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }) {
   const [view, setView] = useState<'list' | 'form'>('list');
   const [currentTab, setCurrentTab] = useState(0);
@@ -7037,6 +7047,16 @@ function ChecklistModule({
                   onGenerateDetailedPDF={onGenerateDetailedPDF}
                 />
               ))}
+              {hasMore && history.length > 0 && (
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={onLoadMore}
+                    className="flex items-center gap-2 px-6 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm shadow-sm active:scale-95"
+                  >
+                    <span>Carregar Mais</span>
+                  </button>
+                </div>
+              )}
               {history.length === 0 && (
                 <div className="py-24 text-center border-2 border-dashed border-slate-200 rounded-[3rem] bg-slate-50/50">
                   <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -7593,6 +7613,8 @@ function CadastroVTR({
   isAdmin, 
   vehicles, 
   history, 
+  hasMore,
+  onLoadMore,
   selectedVehicle, 
   operationType, 
   view, 
@@ -7636,6 +7658,8 @@ function CadastroVTR({
   isAdmin: boolean;
   vehicles: Vehicle[];
   history: RecordEntry[];
+  hasMore?: boolean;
+  onLoadMore?: () => void;
   selectedVehicle: Vehicle | null;
   operationType: 'check-out' | 'check-in' | null;
   view: 'list' | 'history' | 'admin' | 'form';
@@ -8195,6 +8219,16 @@ function CadastroVTR({
                   onGenerateDetailedPDF={onGenerateDetailedPDF}
                 />
               ))}
+              {hasMore && history.length > 0 && (
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={onLoadMore}
+                    className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm shadow-sm active:scale-95"
+                  >
+                    <span>Carregar Mais</span>
+                  </button>
+                </div>
+              )}
               {filteredHistory.length === 0 && (
                 <div className="py-20 text-center bg-white rounded-[2.5rem] border border-dashed border-slate-300">
                   <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
