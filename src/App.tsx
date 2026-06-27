@@ -6,7 +6,7 @@
 declare const __APP_VERSION__: string;
 declare const __BUILD_DATE__: string;
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   auth, 
   db 
@@ -388,15 +388,6 @@ function handleFirestoreError(
   console.log('Auth Info:', errInfo.authInfo);
   console.groupEnd();
 
-  // Dispatch custom event if quota is exceeded
-  if (errInfo.error.toLowerCase().includes('quota')) {
-    try {
-      window.dispatchEvent(new CustomEvent('firestore-quota-exceeded'));
-    } catch (e) {
-      console.error("Failed to dispatch custom quota event:", e);
-    }
-  }
-
   // Here you could integrate with a service like Sentry or LogRocket
   // if (process.env.NODE_ENV === 'production') {
   //   Sentry.captureException(error, { extra: errInfo });
@@ -634,14 +625,6 @@ export default function App() {
     }
   }, [theme]);
 
-  useEffect(() => {
-    const handleQuotaExceeded = () => {
-      setFirestoreQuotaExceeded(true);
-    };
-    window.addEventListener('firestore-quota-exceeded', handleQuotaExceeded);
-    return () => window.removeEventListener('firestore-quota-exceeded', handleQuotaExceeded);
-  }, []);
-
   const [isLocalMode, setIsLocalMode] = useState<boolean>(() => localStorage.getItem('siscopi_local_mode') === 'true');
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null);
@@ -649,14 +632,6 @@ export default function App() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
-  const [firestoreQuotaExceeded, setFirestoreQuotaExceeded] = useState(false);
-
-  const handleEnableLocalModeFromQuota = () => {
-    setIsLocalMode(true);
-    localStorage.setItem('siscopi_local_mode', 'true');
-    setFirestoreQuotaExceeded(false);
-    addNotification("Modo Local (Offline) ativado com sucesso! Seus dados serão mantidos no navegador.", "success");
-  };
   
   // Get today's date in Brasília timezone (UTC-3)
   const todayStr = new Intl.DateTimeFormat('pt-BR', {
@@ -671,25 +646,19 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [historyData, setHistoryData] = useState<any[]>([]);
-  const [historyFilterDate, setHistoryFilterDate] = useState<string>(todayStr);
-
-  const displayedHistoryData = useMemo(() => {
-    if (!historyFilterDate) return historyData;
-    return historyData.filter(item => item.data === historyFilterDate);
-  }, [historyData, historyFilterDate]);
 
   // Lists state
   const [settingsLoaded, setSettingsLoaded] = useState(false);
-  const [personnelList, setPersonnelList] = useState<string[]>(PERSONNEL_LIST);
-  const [prefixoVtList, setPrefixoVtList] = useState<string[]>(PREFIXO_VT_LIST);
-  const [patrimonioVtList, setPatrimonioVtList] = useState<string[]>(PATRIMONIO_VT_LIST);
-  const [moList, setMoList] = useState<string[]>(MO_LIST);
-  const [patrimonioMoList, setPatrimonioMoList] = useState<string[]>(PATRIMONIO_LIST);
-  const [cityList, setCityList] = useState<string[]>(CITY_LIST);
-  const [funcaoLinhaList, setFuncaoLinhaList] = useState<string[]>(FUNCAO_LINHA_LIST);
-  const [horarioLinhaList, setHorarioLinhaList] = useState<string[]>(HORARIO_LINHA_LIST);
-  const [tipoServicoList, setTipoServicoList] = useState<string[]>(TIPO_SERVICO_LIST);
-  const [tipoServicoVtList, setTipoServicoVtList] = useState<string[]>(TIPO_SERVICO_VT_LIST);
+  const [personnelList, setPersonnelList] = useState<string[]>([]);
+  const [prefixoVtList, setPrefixoVtList] = useState<string[]>([]);
+  const [patrimonioVtList, setPatrimonioVtList] = useState<string[]>([]);
+  const [moList, setMoList] = useState<string[]>([]);
+  const [patrimonioMoList, setPatrimonioMoList] = useState<string[]>([]);
+  const [cityList, setCityList] = useState<string[]>([]);
+  const [funcaoLinhaList, setFuncaoLinhaList] = useState<string[]>([]);
+  const [horarioLinhaList, setHorarioLinhaList] = useState<string[]>([]);
+  const [tipoServicoList, setTipoServicoList] = useState<string[]>([]);
+  const [tipoServicoVtList, setTipoServicoVtList] = useState<string[]>([]);
   const [omeOrigem, setOmeOrigem] = useState<string>(OME_ORIGEM);
   const [omeOrigemList, setOmeOrigemList] = useState<string[]>(["14º BPM"]);
   const [adminList, setAdminList] = useState<string[]>(["demetriomarques@gmail.com"]);
@@ -821,10 +790,6 @@ export default function App() {
       setVehicles(activeVehicles);
     }, (err) => {
       console.error("Error fetching vehicles:", err);
-      const errMsg = err instanceof Error ? err.message : String(err);
-      if (errMsg.toLowerCase().includes('quota')) {
-        setFirestoreQuotaExceeded(true);
-      }
     });
     return () => unsubscribe();
   }, [user]);
@@ -840,10 +805,6 @@ export default function App() {
       setStandaloneHistory(historyData);
     }, (error) => {
       console.warn("Offline or Firestore subscription info: Error fetching standalone checklists:", error);
-      const errMsg = error instanceof Error ? error.message : String(error);
-      if (errMsg.toLowerCase().includes('quota')) {
-        setFirestoreQuotaExceeded(true);
-      }
     });
     return () => unsubscribe();
   }, [user, isAdmin]);
@@ -879,10 +840,6 @@ export default function App() {
       setCadastroVtrHistory(recordList);
     }, (error) => {
       console.error("Error fetching Cadastro VTR history:", error);
-      const errMsg = error instanceof Error ? error.message : String(error);
-      if (errMsg.toLowerCase().includes('quota')) {
-        setFirestoreQuotaExceeded(true);
-      }
     });
     return () => unsubscribe();
   }, [user, activeTab, cadastroVtrView, isAdmin]);
@@ -897,12 +854,6 @@ export default function App() {
         userList.push({ id: doc.id, ...doc.data() });
       });
       setAdminUsers(userList);
-    }, (error) => {
-      console.error("Error fetching admin users:", error);
-      const errMsg = error instanceof Error ? error.message : String(error);
-      if (errMsg.toLowerCase().includes('quota')) {
-        setFirestoreQuotaExceeded(true);
-      }
     });
     return () => unsubscribe();
   }, [isAdmin, activeTab, cadastroVtrView]);
@@ -948,10 +899,6 @@ export default function App() {
       setPersistentNotifications(list);
     }, (error) => {
       console.error("Error fetching persistent notifications:", error);
-      const errMsg = error instanceof Error ? error.message : String(error);
-      if (errMsg.toLowerCase().includes('quota')) {
-        setFirestoreQuotaExceeded(true);
-      }
     });
     
     return () => unsubscribe();
@@ -2628,10 +2575,6 @@ export default function App() {
       }
     }, (error) => {
       console.error("Error fetching user role:", error);
-      const errMsg = error instanceof Error ? error.message : String(error);
-      if (errMsg.toLowerCase().includes('quota')) {
-        setFirestoreQuotaExceeded(true);
-      }
     });
     return () => unsub();
   }, [user, isLocalMode]);
@@ -2747,10 +2690,6 @@ export default function App() {
       }
     }, (error) => {
       console.warn("Offline or Firestore subscription info: Error loading settings lists:", error);
-      const errMsg = error instanceof Error ? error.message : String(error);
-      if (errMsg.toLowerCase().includes('quota')) {
-        setFirestoreQuotaExceeded(true);
-      }
       setSettingsLoaded(true);
     });
 
@@ -2765,24 +2704,11 @@ export default function App() {
     const collections = ['atividades_linha', 'efetivo_viaturas', 'efetivo_mos'];
     const unsubscribes: (() => void)[] = [];
 
-    // Clear historyData when changing date to avoid flashing old data
-    setHistoryData([]);
-
     collections.forEach(collName => {
-      let q;
-      if (historyFilterDate) {
-        q = query(
-          collection(db, collName), 
-          where('data', '==', historyFilterDate)
-        );
-      } else {
-        q = query(
-          collection(db, collName), 
-          orderBy('createdAt', 'desc'),
-          limit(50)
-        );
-      }
-
+      const q = query(
+        collection(db, collName), 
+        where('data', '==', todayStr)
+      );
       const unsub = onSnapshot(q, (snapshot) => {
         const data = snapshot.docs.map(doc => {
           const docData = doc.data();
@@ -2805,16 +2731,12 @@ export default function App() {
         });
       }, (error) => {
         console.warn(`Offline or Firestore subscription info: Error monitoring history for ${collName}:`, error);
-        const errMsg = error instanceof Error ? error.message : String(error);
-        if (errMsg.toLowerCase().includes('quota')) {
-          setFirestoreQuotaExceeded(true);
-        }
       });
       unsubscribes.push(unsub);
     });
 
     return () => unsubscribes.forEach(unsub => unsub());
-  }, [user, isLocalMode, historyFilterDate]);
+  }, [user, isLocalMode]);
 
   // Local Storage Mode Handler
   useEffect(() => {
@@ -3910,25 +3832,6 @@ export default function App() {
           
           <div className="h-px bg-slate-100 w-full mb-8"></div>
           
-          {firestoreQuotaExceeded && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-2xl text-left shadow-sm"
-            >
-              <div className="flex items-start gap-2.5">
-                <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={18} />
-                <div>
-                  <h4 className="text-xs font-black text-amber-900 uppercase tracking-wider">Limite de Cota Excedido</h4>
-                  <p className="text-[11px] text-amber-700 font-medium leading-relaxed mt-1">
-                    O servidor de banco de dados atingiu o limite de leitura gratuito. 
-                    Por favor, entre em <strong>Modo Local (Offline)</strong> para usar o sistema normalmente sem perder seus dados.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          
           <button 
             onClick={handleLogin}
             disabled={loginLoading}
@@ -3940,14 +3843,6 @@ export default function App() {
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-6 h-6" />
             )}
             {loginLoading ? "Acessando..." : "Entrar com Google"}
-          </button>
-
-          <button 
-            onClick={handleLocalLogin}
-            className="w-full mt-3 flex items-center justify-center gap-2 py-3 bg-blue-50 hover:bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:hover:bg-blue-950/30 dark:text-blue-400 rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95"
-          >
-            <Siren size={14} className="animate-pulse" />
-            Entrar em Modo Local (Offline)
           </button>
 
 
@@ -4165,12 +4060,6 @@ export default function App() {
                   className="h-4 w-auto mt-0.5 object-contain" 
                   height={16}
                 />
-                {isLocalMode && (
-                  <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-300 w-fit uppercase tracking-wider">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                    Modo Local
-                  </span>
-                )}
               </div>
             </div>
           </div>
@@ -4317,12 +4206,6 @@ export default function App() {
                 className="h-3.5 w-auto mt-0.5 object-contain" 
                 height={14}
               />
-              {isLocalMode && (
-                <span className="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[8px] font-black bg-amber-500/25 border border-amber-500/30 text-amber-200 w-fit uppercase tracking-wider">
-                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-pulse"></span>
-                  Local
-                </span>
-              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -4351,35 +4234,6 @@ export default function App() {
 
         {/* Main Content */}
         <main className="p-3 sm:p-6 max-w-5xl mx-auto">
-          {firestoreQuotaExceeded && !isLocalMode && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-l-4 border-amber-500 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm"
-            >
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-xl mt-0.5 sm:mt-0">
-                  <AlertTriangle size={24} />
-                </div>
-                <div className="text-left">
-                  <h4 className="text-sm font-black text-amber-900 dark:text-amber-200">
-                    Limite de Cota do Servidor Excedido
-                  </h4>
-                  <p className="text-xs text-amber-700 dark:text-amber-300 font-medium leading-relaxed mt-0.5">
-                    A cota gratuita diária de leitura do banco de dados na nuvem foi atingida. 
-                    Para continuar usando o sistema normalmente e visualizar/cadastrar seus dados sem perdas, ative o Modo Local.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleEnableLocalModeFromQuota}
-                className="w-full sm:w-auto px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black rounded-xl transition-all shadow-md active:scale-95 shrink-0 flex items-center justify-center gap-2"
-              >
-                Ativar Modo Local (Offline)
-              </button>
-            </motion.div>
-          )}
-
           <AnimatePresence mode="wait">
             {activeTab === 'dashboard' && (
               <motion.div 
@@ -4617,7 +4471,7 @@ export default function App() {
                 {/* Banners de Sistemas Externos */}
                 <div className="mt-8 flex flex-col gap-6">
                   {/* Banner GESTÃO DE SERVIÇOS (Base44) */}
-                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
+                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 text-white rounded-2xl border border-zinc-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
                     {/* Decorative background visual elements */}
                     <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
                     
@@ -4652,7 +4506,7 @@ export default function App() {
                   </div>
 
                   {/* Banner ESCALAS PMPE */}
-                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
+                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 text-white rounded-2xl border border-zinc-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
                     {/* Decorative background visual elements */}
                     <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
                     
@@ -4687,7 +4541,7 @@ export default function App() {
                   </div>
 
                   {/* Banner AUTOVISION */}
-                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
+                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 text-white rounded-2xl border border-zinc-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
                     {/* Decorative background visual elements */}
                     <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
                     
@@ -4726,7 +4580,7 @@ export default function App() {
                   </div>
 
                   {/* Banner E-MAIL INSTITUCIONAL */}
-                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
+                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-zinc-800 via-zinc-900 to-zinc-950 text-white rounded-2xl border border-zinc-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
                     {/* Decorative background visual elements */}
                     <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
                     
@@ -4770,19 +4624,17 @@ export default function App() {
 
                 <section className="mt-12">
                   <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-900">
-                        {!historyFilterDate ? "Registros Recentes" : (historyFilterDate === todayStr ? "Registros de Hoje" : `Registros de ${new Date(historyFilterDate + 'T12:00:00').toLocaleDateString('pt-BR')}`)}
-                      </h2>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {!historyFilterDate ? "Últimos registros operacionais cadastrados no sistema." : (historyFilterDate === todayStr ? "Acesse e exporte todos os registros operacionais de hoje." : `Registros salvos em ${new Date(historyFilterDate + 'T12:00:00').toLocaleDateString('pt-BR')}.`)}
-                      </p>
-                    </div>
+                    <h2 className="text-xl font-bold text-slate-900">Registros de Hoje</h2>
                     <div className="flex items-center gap-4">
                       <button 
                         onClick={() => {
-                          const filterDate = historyFilterDate || todayStr;
-                          generateConsolidatedPDF(filterDate, filterDate, ['atividades_linha', 'efetivo_viaturas', 'efetivo_mos']);
+                          const today = new Intl.DateTimeFormat('pt-BR', {
+                            timeZone: 'America/Sao_Paulo',
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                          }).format(new Date()).split('/').reverse().join('-');
+                          generateConsolidatedPDF(today, today, ['atividades_linha', 'efetivo_viaturas', 'efetivo_mos']);
                         }}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg active:scale-95"
                       >
@@ -4794,7 +4646,7 @@ export default function App() {
                   </div>
                   <div className="bg-white rounded-2xl border border-slate-200 overflow-x-auto shadow-sm">
                     <div className="min-w-[600px] md:min-w-0">
-                      {displayedHistoryData
+                      {historyData
                         .slice(0, 5)
                         .map((item, idx) => (
                         <HistoryItem 
@@ -4804,12 +4656,12 @@ export default function App() {
                           onDelete={() => handleDelete(item)}
                           onEdit={() => handleEdit(item)}
                           isAdmin={isAdmin}
-                          isLast={idx === 4 || idx === displayedHistoryData.length - 1} 
+                          isLast={idx === 4 || idx === historyData.length - 1} 
                           userId={user?.uid}
                         />
                       ))}
                     </div>
-                    {displayedHistoryData.length === 0 && (
+                    {historyData.length === 0 && (
                       <div className="p-10 text-center text-slate-400">Nenhum registro encontrado.</div>
                     )}
                   </div>
@@ -5688,38 +5540,14 @@ export default function App() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
-                <header className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Histórico de Registros</h1>
-                    <p className="text-slate-500 font-medium">Acesse, edite e exporte os registros operacionais cadastrados.</p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2.5 bg-slate-100/80 p-2 rounded-2xl border border-slate-200 shrink-0 self-start md:self-auto">
-                    <span className="text-xs font-bold text-slate-600 px-2 flex items-center gap-1.5">
-                      <Calendar size={14} className="text-slate-500" />
-                      Filtrar por Data:
-                    </span>
-                    <input 
-                      type="date" 
-                      value={historyFilterDate} 
-                      onChange={(e) => setHistoryFilterDate(e.target.value)} 
-                      className="p-1.5 text-xs font-bold text-slate-700 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
-                    />
-                    {historyFilterDate ? (
-                      <button 
-                        onClick={() => setHistoryFilterDate("")}
-                        className="px-3 py-1.5 text-xs font-bold bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 rounded-xl transition-all shadow-sm flex items-center gap-1 active:scale-95"
-                      >
-                        Ver Todos
-                      </button>
-                    ) : (
-                      <span className="text-[10px] font-black bg-blue-100 text-blue-800 px-2 py-1 rounded-lg uppercase tracking-wider">Todos Ativos</span>
-                    )}
-                  </div>
+                <header className="mb-8">
+                  <h1 className="text-3xl font-bold text-slate-900">Registros de Hoje</h1>
+                  <p className="text-slate-500">Acesse e baixe todos os registros realizados no dia de hoje.</p>
                 </header>
 
                 <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                   <div className="w-full">
-                    {displayedHistoryData.map((item, idx) => (
+                    {historyData.map((item, idx) => (
                       <HistoryItem 
                         key={item.id} 
                         item={item} 
@@ -5727,14 +5555,14 @@ export default function App() {
                         onDelete={() => handleDelete(item)}
                         onEdit={() => handleEdit(item)}
                         isAdmin={isAdmin}
-                        isLast={idx === displayedHistoryData.length - 1} 
+                        isLast={idx === historyData.length - 1} 
                         userId={user?.uid}
                         isExpanded={expandedHistoryId === item.id}
                         onToggle={() => setExpandedHistoryId(expandedHistoryId === item.id ? null : item.id)}
                       />
                     ))}
                   </div>
-                  {displayedHistoryData.length === 0 && (
+                  {historyData.length === 0 && (
                     <div className="p-20 text-center text-slate-400">
                       <History size={48} className="mx-auto mb-4 opacity-20" />
                       Nenhum registro encontrado.
