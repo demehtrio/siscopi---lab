@@ -6,7 +6,7 @@
 declare const __APP_VERSION__: string;
 declare const __BUILD_DATE__: string;
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { 
   auth, 
   db 
@@ -646,19 +646,25 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [historyData, setHistoryData] = useState<any[]>([]);
+  const [historyFilterDate, setHistoryFilterDate] = useState<string>(todayStr);
+
+  const displayedHistoryData = useMemo(() => {
+    if (!historyFilterDate) return historyData;
+    return historyData.filter(item => item.data === historyFilterDate);
+  }, [historyData, historyFilterDate]);
 
   // Lists state
   const [settingsLoaded, setSettingsLoaded] = useState(false);
-  const [personnelList, setPersonnelList] = useState<string[]>([]);
-  const [prefixoVtList, setPrefixoVtList] = useState<string[]>([]);
-  const [patrimonioVtList, setPatrimonioVtList] = useState<string[]>([]);
-  const [moList, setMoList] = useState<string[]>([]);
-  const [patrimonioMoList, setPatrimonioMoList] = useState<string[]>([]);
-  const [cityList, setCityList] = useState<string[]>([]);
-  const [funcaoLinhaList, setFuncaoLinhaList] = useState<string[]>([]);
-  const [horarioLinhaList, setHorarioLinhaList] = useState<string[]>([]);
-  const [tipoServicoList, setTipoServicoList] = useState<string[]>([]);
-  const [tipoServicoVtList, setTipoServicoVtList] = useState<string[]>([]);
+  const [personnelList, setPersonnelList] = useState<string[]>(PERSONNEL_LIST);
+  const [prefixoVtList, setPrefixoVtList] = useState<string[]>(PREFIXO_VT_LIST);
+  const [patrimonioVtList, setPatrimonioVtList] = useState<string[]>(PATRIMONIO_VT_LIST);
+  const [moList, setMoList] = useState<string[]>(MO_LIST);
+  const [patrimonioMoList, setPatrimonioMoList] = useState<string[]>(PATRIMONIO_LIST);
+  const [cityList, setCityList] = useState<string[]>(CITY_LIST);
+  const [funcaoLinhaList, setFuncaoLinhaList] = useState<string[]>(FUNCAO_LINHA_LIST);
+  const [horarioLinhaList, setHorarioLinhaList] = useState<string[]>(HORARIO_LINHA_LIST);
+  const [tipoServicoList, setTipoServicoList] = useState<string[]>(TIPO_SERVICO_LIST);
+  const [tipoServicoVtList, setTipoServicoVtList] = useState<string[]>(TIPO_SERVICO_VT_LIST);
   const [omeOrigem, setOmeOrigem] = useState<string>(OME_ORIGEM);
   const [omeOrigemList, setOmeOrigemList] = useState<string[]>(["14º BPM"]);
   const [adminList, setAdminList] = useState<string[]>(["demetriomarques@gmail.com"]);
@@ -2704,11 +2710,24 @@ export default function App() {
     const collections = ['atividades_linha', 'efetivo_viaturas', 'efetivo_mos'];
     const unsubscribes: (() => void)[] = [];
 
+    // Clear historyData when changing date to avoid flashing old data
+    setHistoryData([]);
+
     collections.forEach(collName => {
-      const q = query(
-        collection(db, collName), 
-        where('data', '==', todayStr)
-      );
+      let q;
+      if (historyFilterDate) {
+        q = query(
+          collection(db, collName), 
+          where('data', '==', historyFilterDate)
+        );
+      } else {
+        q = query(
+          collection(db, collName), 
+          orderBy('createdAt', 'desc'),
+          limit(50)
+        );
+      }
+
       const unsub = onSnapshot(q, (snapshot) => {
         const data = snapshot.docs.map(doc => {
           const docData = doc.data();
@@ -2736,7 +2755,7 @@ export default function App() {
     });
 
     return () => unsubscribes.forEach(unsub => unsub());
-  }, [user, isLocalMode]);
+  }, [user, isLocalMode, historyFilterDate]);
 
   // Local Storage Mode Handler
   useEffect(() => {
@@ -4624,17 +4643,19 @@ export default function App() {
 
                 <section className="mt-12">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-slate-900">Registros de Hoje</h2>
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900">
+                        {!historyFilterDate ? "Registros Recentes" : (historyFilterDate === todayStr ? "Registros de Hoje" : `Registros de ${new Date(historyFilterDate + 'T12:00:00').toLocaleDateString('pt-BR')}`)}
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {!historyFilterDate ? "Últimos registros operacionais cadastrados no sistema." : (historyFilterDate === todayStr ? "Acesse e exporte todos os registros operacionais de hoje." : `Registros salvos em ${new Date(historyFilterDate + 'T12:00:00').toLocaleDateString('pt-BR')}.`)}
+                      </p>
+                    </div>
                     <div className="flex items-center gap-4">
                       <button 
                         onClick={() => {
-                          const today = new Intl.DateTimeFormat('pt-BR', {
-                            timeZone: 'America/Sao_Paulo',
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                          }).format(new Date()).split('/').reverse().join('-');
-                          generateConsolidatedPDF(today, today, ['atividades_linha', 'efetivo_viaturas', 'efetivo_mos']);
+                          const filterDate = historyFilterDate || todayStr;
+                          generateConsolidatedPDF(filterDate, filterDate, ['atividades_linha', 'efetivo_viaturas', 'efetivo_mos']);
                         }}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg active:scale-95"
                       >
@@ -4646,7 +4667,7 @@ export default function App() {
                   </div>
                   <div className="bg-white rounded-2xl border border-slate-200 overflow-x-auto shadow-sm">
                     <div className="min-w-[600px] md:min-w-0">
-                      {historyData
+                      {displayedHistoryData
                         .slice(0, 5)
                         .map((item, idx) => (
                         <HistoryItem 
@@ -4656,12 +4677,12 @@ export default function App() {
                           onDelete={() => handleDelete(item)}
                           onEdit={() => handleEdit(item)}
                           isAdmin={isAdmin}
-                          isLast={idx === 4 || idx === historyData.length - 1} 
+                          isLast={idx === 4 || idx === displayedHistoryData.length - 1} 
                           userId={user?.uid}
                         />
                       ))}
                     </div>
-                    {historyData.length === 0 && (
+                    {displayedHistoryData.length === 0 && (
                       <div className="p-10 text-center text-slate-400">Nenhum registro encontrado.</div>
                     )}
                   </div>
@@ -5540,14 +5561,38 @@ export default function App() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
-                <header className="mb-8">
-                  <h1 className="text-3xl font-bold text-slate-900">Registros de Hoje</h1>
-                  <p className="text-slate-500">Acesse e baixe todos os registros realizados no dia de hoje.</p>
+                <header className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Histórico de Registros</h1>
+                    <p className="text-slate-500 font-medium">Acesse, edite e exporte os registros operacionais cadastrados.</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2.5 bg-slate-100/80 p-2 rounded-2xl border border-slate-200 shrink-0 self-start md:self-auto">
+                    <span className="text-xs font-bold text-slate-600 px-2 flex items-center gap-1.5">
+                      <Calendar size={14} className="text-slate-500" />
+                      Filtrar por Data:
+                    </span>
+                    <input 
+                      type="date" 
+                      value={historyFilterDate} 
+                      onChange={(e) => setHistoryFilterDate(e.target.value)} 
+                      className="p-1.5 text-xs font-bold text-slate-700 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
+                    />
+                    {historyFilterDate ? (
+                      <button 
+                        onClick={() => setHistoryFilterDate("")}
+                        className="px-3 py-1.5 text-xs font-bold bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 rounded-xl transition-all shadow-sm flex items-center gap-1 active:scale-95"
+                      >
+                        Ver Todos
+                      </button>
+                    ) : (
+                      <span className="text-[10px] font-black bg-blue-100 text-blue-800 px-2 py-1 rounded-lg uppercase tracking-wider">Todos Ativos</span>
+                    )}
+                  </div>
                 </header>
 
                 <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                   <div className="w-full">
-                    {historyData.map((item, idx) => (
+                    {displayedHistoryData.map((item, idx) => (
                       <HistoryItem 
                         key={item.id} 
                         item={item} 
@@ -5555,14 +5600,14 @@ export default function App() {
                         onDelete={() => handleDelete(item)}
                         onEdit={() => handleEdit(item)}
                         isAdmin={isAdmin}
-                        isLast={idx === historyData.length - 1} 
+                        isLast={idx === displayedHistoryData.length - 1} 
                         userId={user?.uid}
                         isExpanded={expandedHistoryId === item.id}
                         onToggle={() => setExpandedHistoryId(expandedHistoryId === item.id ? null : item.id)}
                       />
                     ))}
                   </div>
-                  {historyData.length === 0 && (
+                  {displayedHistoryData.length === 0 && (
                     <div className="p-20 text-center text-slate-400">
                       <History size={48} className="mx-auto mb-4 opacity-20" />
                       Nenhum registro encontrado.
