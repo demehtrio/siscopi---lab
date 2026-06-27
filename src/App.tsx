@@ -388,6 +388,15 @@ function handleFirestoreError(
   console.log('Auth Info:', errInfo.authInfo);
   console.groupEnd();
 
+  // Dispatch custom event if quota is exceeded
+  if (errInfo.error.toLowerCase().includes('quota')) {
+    try {
+      window.dispatchEvent(new CustomEvent('firestore-quota-exceeded'));
+    } catch (e) {
+      console.error("Failed to dispatch custom quota event:", e);
+    }
+  }
+
   // Here you could integrate with a service like Sentry or LogRocket
   // if (process.env.NODE_ENV === 'production') {
   //   Sentry.captureException(error, { extra: errInfo });
@@ -625,6 +634,14 @@ export default function App() {
     }
   }, [theme]);
 
+  useEffect(() => {
+    const handleQuotaExceeded = () => {
+      setFirestoreQuotaExceeded(true);
+    };
+    window.addEventListener('firestore-quota-exceeded', handleQuotaExceeded);
+    return () => window.removeEventListener('firestore-quota-exceeded', handleQuotaExceeded);
+  }, []);
+
   const [isLocalMode, setIsLocalMode] = useState<boolean>(() => localStorage.getItem('siscopi_local_mode') === 'true');
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null);
@@ -632,6 +649,14 @@ export default function App() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [firestoreQuotaExceeded, setFirestoreQuotaExceeded] = useState(false);
+
+  const handleEnableLocalModeFromQuota = () => {
+    setIsLocalMode(true);
+    localStorage.setItem('siscopi_local_mode', 'true');
+    setFirestoreQuotaExceeded(false);
+    addNotification("Modo Local (Offline) ativado com sucesso! Seus dados serão mantidos no navegador.", "success");
+  };
   
   // Get today's date in Brasília timezone (UTC-3)
   const todayStr = new Intl.DateTimeFormat('pt-BR', {
@@ -796,6 +821,10 @@ export default function App() {
       setVehicles(activeVehicles);
     }, (err) => {
       console.error("Error fetching vehicles:", err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (errMsg.toLowerCase().includes('quota')) {
+        setFirestoreQuotaExceeded(true);
+      }
     });
     return () => unsubscribe();
   }, [user]);
@@ -811,6 +840,10 @@ export default function App() {
       setStandaloneHistory(historyData);
     }, (error) => {
       console.warn("Offline or Firestore subscription info: Error fetching standalone checklists:", error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg.toLowerCase().includes('quota')) {
+        setFirestoreQuotaExceeded(true);
+      }
     });
     return () => unsubscribe();
   }, [user, isAdmin]);
@@ -846,6 +879,10 @@ export default function App() {
       setCadastroVtrHistory(recordList);
     }, (error) => {
       console.error("Error fetching Cadastro VTR history:", error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg.toLowerCase().includes('quota')) {
+        setFirestoreQuotaExceeded(true);
+      }
     });
     return () => unsubscribe();
   }, [user, activeTab, cadastroVtrView, isAdmin]);
@@ -860,6 +897,12 @@ export default function App() {
         userList.push({ id: doc.id, ...doc.data() });
       });
       setAdminUsers(userList);
+    }, (error) => {
+      console.error("Error fetching admin users:", error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg.toLowerCase().includes('quota')) {
+        setFirestoreQuotaExceeded(true);
+      }
     });
     return () => unsubscribe();
   }, [isAdmin, activeTab, cadastroVtrView]);
@@ -905,6 +948,10 @@ export default function App() {
       setPersistentNotifications(list);
     }, (error) => {
       console.error("Error fetching persistent notifications:", error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg.toLowerCase().includes('quota')) {
+        setFirestoreQuotaExceeded(true);
+      }
     });
     
     return () => unsubscribe();
@@ -2581,6 +2628,10 @@ export default function App() {
       }
     }, (error) => {
       console.error("Error fetching user role:", error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg.toLowerCase().includes('quota')) {
+        setFirestoreQuotaExceeded(true);
+      }
     });
     return () => unsub();
   }, [user, isLocalMode]);
@@ -2696,6 +2747,10 @@ export default function App() {
       }
     }, (error) => {
       console.warn("Offline or Firestore subscription info: Error loading settings lists:", error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg.toLowerCase().includes('quota')) {
+        setFirestoreQuotaExceeded(true);
+      }
       setSettingsLoaded(true);
     });
 
@@ -2750,6 +2805,10 @@ export default function App() {
         });
       }, (error) => {
         console.warn(`Offline or Firestore subscription info: Error monitoring history for ${collName}:`, error);
+        const errMsg = error instanceof Error ? error.message : String(error);
+        if (errMsg.toLowerCase().includes('quota')) {
+          setFirestoreQuotaExceeded(true);
+        }
       });
       unsubscribes.push(unsub);
     });
@@ -3851,6 +3910,25 @@ export default function App() {
           
           <div className="h-px bg-slate-100 w-full mb-8"></div>
           
+          {firestoreQuotaExceeded && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-2xl text-left shadow-sm"
+            >
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={18} />
+                <div>
+                  <h4 className="text-xs font-black text-amber-900 uppercase tracking-wider">Limite de Cota Excedido</h4>
+                  <p className="text-[11px] text-amber-700 font-medium leading-relaxed mt-1">
+                    O servidor de banco de dados atingiu o limite de leitura gratuito. 
+                    Por favor, entre em <strong>Modo Local (Offline)</strong> para usar o sistema normalmente sem perder seus dados.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+          
           <button 
             onClick={handleLogin}
             disabled={loginLoading}
@@ -3862,6 +3940,14 @@ export default function App() {
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-6 h-6" />
             )}
             {loginLoading ? "Acessando..." : "Entrar com Google"}
+          </button>
+
+          <button 
+            onClick={handleLocalLogin}
+            className="w-full mt-3 flex items-center justify-center gap-2 py-3 bg-blue-50 hover:bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:hover:bg-blue-950/30 dark:text-blue-400 rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95"
+          >
+            <Siren size={14} className="animate-pulse" />
+            Entrar em Modo Local (Offline)
           </button>
 
 
@@ -4079,6 +4165,12 @@ export default function App() {
                   className="h-4 w-auto mt-0.5 object-contain" 
                   height={16}
                 />
+                {isLocalMode && (
+                  <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-300 w-fit uppercase tracking-wider">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    Modo Local
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -4225,6 +4317,12 @@ export default function App() {
                 className="h-3.5 w-auto mt-0.5 object-contain" 
                 height={14}
               />
+              {isLocalMode && (
+                <span className="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[8px] font-black bg-amber-500/25 border border-amber-500/30 text-amber-200 w-fit uppercase tracking-wider">
+                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-pulse"></span>
+                  Local
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -4253,6 +4351,35 @@ export default function App() {
 
         {/* Main Content */}
         <main className="p-3 sm:p-6 max-w-5xl mx-auto">
+          {firestoreQuotaExceeded && !isLocalMode && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-l-4 border-amber-500 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-xl mt-0.5 sm:mt-0">
+                  <AlertTriangle size={24} />
+                </div>
+                <div className="text-left">
+                  <h4 className="text-sm font-black text-amber-900 dark:text-amber-200">
+                    Limite de Cota do Servidor Excedido
+                  </h4>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 font-medium leading-relaxed mt-0.5">
+                    A cota gratuita diária de leitura do banco de dados na nuvem foi atingida. 
+                    Para continuar usando o sistema normalmente e visualizar/cadastrar seus dados sem perdas, ative o Modo Local.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleEnableLocalModeFromQuota}
+                className="w-full sm:w-auto px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black rounded-xl transition-all shadow-md active:scale-95 shrink-0 flex items-center justify-center gap-2"
+              >
+                Ativar Modo Local (Offline)
+              </button>
+            </motion.div>
+          )}
+
           <AnimatePresence mode="wait">
             {activeTab === 'dashboard' && (
               <motion.div 
