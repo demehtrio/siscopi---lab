@@ -52,6 +52,7 @@ import {
   FileSpreadsheet,
   Plus, 
   PlusCircle,
+  Send,
   History,
   AlertCircle,
   AlertTriangle,
@@ -610,6 +611,59 @@ const ChecklistSearchableSelect = ({
   );
 };
 
+const GeminiIcon = ({ className = "size-6" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <defs>
+      <linearGradient id="gemini-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#93c5fd" />
+        <stop offset="50%" stopColor="#818cf8" />
+        <stop offset="100%" stopColor="#ec4899" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M12 3C12 3 13.5 8.5 19 12C13.5 15.5 12 21 12 21C12 21 10.5 15.5 5 12C10.5 8.5 12 3 12 3Z"
+      fill="url(#gemini-gradient)"
+    />
+  </svg>
+);
+
+const renderBoldText = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-bold text-slate-900 dark:text-white">{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+};
+
+const renderMarkdown = (text: string) => {
+  return text.split('\n').map((line, idx) => {
+    if (line.startsWith('### ')) {
+      return <h4 key={idx} className="font-bold text-sm mt-2 mb-1 text-slate-900 dark:text-white">{line.slice(4)}</h4>;
+    }
+    if (line.startsWith('## ')) {
+      return <h3 key={idx} className="font-bold text-base mt-2 mb-1 text-slate-900 dark:text-white">{line.slice(3)}</h3>;
+    }
+    if (line.startsWith('# ')) {
+      return <h2 key={idx} className="font-bold text-lg mt-2 mb-1 text-slate-900 dark:text-white">{line.slice(2)}</h2>;
+    }
+    if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+      const content = line.trim().substring(2);
+      return (
+        <li key={idx} className="ml-4 list-disc text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+          {renderBoldText(content)}
+        </li>
+      );
+    }
+    return (
+      <p key={idx} className="text-sm text-slate-700 dark:text-slate-200 min-h-[1rem] leading-relaxed">
+        {renderBoldText(line)}
+      </p>
+    );
+  });
+};
+
 export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme');
@@ -628,6 +682,115 @@ export default function App() {
   const [isLocalMode, setIsLocalMode] = useState<boolean>(() => localStorage.getItem('siscopi_local_mode') === 'true');
   const [isQuotaExceeded, setIsQuotaExceeded] = useState<boolean>(() => localStorage.getItem('siscopi_quota_exceeded') === 'true');
   const [user, setUser] = useState<User | null>(null);
+
+  // Gemini Assistant State & Logic
+  const [isGeminiOpen, setIsGeminiOpen] = useState<boolean>(false);
+  const geminiEndRef = useRef<HTMLDivElement>(null);
+
+  const [geminiMessages, setGeminiMessages] = useState<any[]>(() => {
+    const saved = localStorage.getItem('siscopi_gemini_messages');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((m: any) => ({
+          ...m,
+          timestamp: new Date(m.timestamp)
+        }));
+      } catch (e) {
+        return [];
+      }
+    }
+    return [
+      {
+        id: 'welcome',
+        role: 'assistant',
+        content: 'Olá! Sou o Assistente SisCOpI AI. Como posso ajudar você hoje com a gestão do efetivo, checklists de viaturas ou dúvidas operacionais?',
+        timestamp: new Date()
+      }
+    ];
+  });
+  const [geminiInput, setGeminiInput] = useState<string>('');
+  const [isGeminiLoading, setIsGeminiLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isGeminiOpen) {
+      geminiEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [geminiMessages, isGeminiLoading, isGeminiOpen]);
+
+  useEffect(() => {
+    localStorage.setItem('siscopi_gemini_messages', JSON.stringify(geminiMessages));
+  }, [geminiMessages]);
+
+  const handleSendGeminiMessage = async (textToSend?: string) => {
+    const messageText = textToSend || geminiInput;
+    if (!messageText.trim() || isGeminiLoading) return;
+
+    const userMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: messageText.trim(),
+      timestamp: new Date()
+    };
+
+    setGeminiMessages(prev => [...prev, userMessage]);
+    if (!textToSend) {
+      setGeminiInput('');
+    }
+    setIsGeminiLoading(true);
+
+    try {
+      const historyContext = geminiMessages
+        .slice(-10)
+        .map(m => ({ role: m.role, content: m.content }));
+
+      const response = await fetch('/api/gemini/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: messageText.trim(),
+          history: historyContext
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao processar mensagem.');
+      }
+
+      const assistantMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.text,
+        timestamp: new Date()
+      };
+      setGeminiMessages(prev => [...prev, assistantMessage]);
+    } catch (error: any) {
+      console.error('Error sending Gemini message:', error);
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `⚠️ Erro: ${error?.message || 'Não foi possível se comunicar com o Assistente Gemini.'}`,
+        timestamp: new Date()
+      };
+      setGeminiMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsGeminiLoading(false);
+    }
+  };
+
+  const handleClearGeminiHistory = () => {
+    setGeminiMessages([
+      {
+        id: 'welcome',
+        role: 'assistant',
+        content: 'Olá! Sou o Assistente SisCOpI AI. Como posso ajudar você hoje com a gestão do efetivo, checklists de viaturas ou dúvidas operacionais?',
+        timestamp: new Date()
+      }
+    ]);
+  };
 
   const handleSubscriptionError = useCallback((error: any, context: string) => {
     console.error(`Error in ${context}:`, error);
@@ -6119,6 +6282,166 @@ export default function App() {
           <PDFPreviewModal url={pdfPreviewUrl} onClose={closePdfPreview} />
         )}
       </AnimatePresence>
+
+      {/* Botão Flutuante e Widget do Gemini */}
+      {user && (
+        <>
+          {/* Botão Flutuante */}
+          <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[130]">
+            <motion.button
+              onClick={() => setIsGeminiOpen(!isGeminiOpen)}
+              className="relative p-0 size-14 rounded-full shadow-2xl flex items-center justify-center cursor-pointer bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 hover:scale-110 active:scale-95 transition-all duration-300 group"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {/* Pulsing ring around button to grab attention */}
+              <span className="absolute inset-0 rounded-full bg-indigo-500/10 animate-ping" />
+              
+              <GeminiIcon className="size-8" />
+              
+              {/* Tooltip on hover */}
+              <div className="absolute right-16 px-3 py-1.5 bg-slate-900/90 dark:bg-slate-800/95 backdrop-blur-sm text-white text-xs font-semibold rounded-lg shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none border border-slate-700/30">
+                Assistente AI
+              </div>
+            </motion.button>
+          </div>
+
+          {/* Painel do Chat */}
+          <AnimatePresence>
+            {isGeminiOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 50, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="fixed bottom-36 right-4 left-4 md:left-auto md:w-[420px] h-[550px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-[150] flex flex-col overflow-hidden transition-colors duration-300"
+              >
+                {/* Header */}
+                <div className="px-4 py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-700 text-white flex items-center justify-between shadow-md">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 bg-white/15 rounded-xl backdrop-blur-sm">
+                      <GeminiIcon className="size-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm tracking-wide">Assistente SisCOpI AI</h3>
+                      <p className="text-[10px] text-indigo-100 font-medium">Conectado via Gemini 3.5 Flash</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {/* Clear Conversation */}
+                    <button
+                      onClick={handleClearGeminiHistory}
+                      title="Limpar conversa"
+                      className="p-1.5 hover:bg-white/10 rounded-lg text-indigo-100 hover:text-white transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    {/* Close Panel */}
+                    <button
+                      onClick={() => setIsGeminiOpen(false)}
+                      className="p-1.5 hover:bg-white/10 rounded-lg text-indigo-100 hover:text-white transition-colors"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Messages Body */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950/40 no-scrollbar">
+                  {geminiMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[85%] px-4 py-3 rounded-2xl shadow-sm text-sm leading-relaxed ${
+                          msg.role === 'user'
+                            ? 'bg-blue-600 text-white rounded-tr-none font-medium'
+                            : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-800/80 rounded-tl-none'
+                        }`}
+                      >
+                        {msg.role === 'assistant' ? (
+                          <div className="space-y-1.5 break-words">
+                            {renderMarkdown(msg.content)}
+                          </div>
+                        ) : (
+                          <p className="break-words font-medium">{msg.content}</p>
+                        )}
+                        <span
+                          className={`block text-[9px] mt-1 text-right ${
+                            msg.role === 'user' ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'
+                          }`}
+                        >
+                          {msg.timestamp instanceof Date
+                            ? msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            : new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Loading / Typing Animation */}
+                  {isGeminiLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800/80 px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-1.5 shadow-sm">
+                        <span className="size-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="size-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="size-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  )}
+                  <div ref={geminiEndRef} />
+                </div>
+
+                {/* Suggested Prompts Pills */}
+                {geminiMessages.length <= 1 && !isGeminiLoading && (
+                  <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/40 flex gap-2 overflow-x-auto no-scrollbar scroll-smooth">
+                    {[
+                      "Como preencher o checklist?",
+                      "Como funciona o modo local?",
+                      "Dicas de manutenção"
+                    ].map((pill, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleSendGeminiMessage(pill)}
+                        className="px-3 py-1 bg-white dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-full hover:bg-slate-50 dark:hover:bg-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 whitespace-nowrap transition-all shadow-sm shrink-0 cursor-pointer"
+                      >
+                        {pill}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Input Area */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendGeminiMessage();
+                  }}
+                  className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex gap-2 items-center transition-colors duration-300"
+                >
+                  <input
+                    type="text"
+                    value={geminiInput}
+                    onChange={(e) => setGeminiInput(e.target.value)}
+                    disabled={isGeminiLoading}
+                    placeholder="Digite sua dúvida operacional..."
+                    className="flex-1 px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 disabled:opacity-60 transition-all"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!geminiInput.trim() || isGeminiLoading}
+                    className="p-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all shadow-md disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center justify-center shrink-0"
+                  >
+                    <Send size={16} />
+                  </button>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
+      )}
 
       {/* Notifications */}
       <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">

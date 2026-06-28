@@ -1,5 +1,6 @@
 {
   "name": "Remix: Sistema de Cadastramento Operacional Integrado",
   "description": "Sistema de Cadastramento Operacional Integrado (SisCOpI) com gestão de efetivo, Cadastro VTR e Checklist de Viaturas independente.",
-  "requestFramePermissions": ["geolocation"]
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
