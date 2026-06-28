@@ -626,7 +626,27 @@ export default function App() {
   }, [theme]);
 
   const [isLocalMode, setIsLocalMode] = useState<boolean>(() => localStorage.getItem('siscopi_local_mode') === 'true');
+  const [isQuotaExceeded, setIsQuotaExceeded] = useState<boolean>(() => localStorage.getItem('siscopi_quota_exceeded') === 'true');
   const [user, setUser] = useState<User | null>(null);
+
+  const handleSubscriptionError = useCallback((error: any, context: string) => {
+    console.error(`Error in ${context}:`, error);
+    const errMsg = error?.message || String(error);
+    if (
+      errMsg.includes('Quota exceeded') || 
+      errMsg.includes('Quota limit exceeded') || 
+      error?.code === 'resource-exhausted'
+    ) {
+      setIsQuotaExceeded(true);
+      localStorage.setItem('siscopi_quota_exceeded', 'true');
+      if (localStorage.getItem('siscopi_local_mode') !== 'true') {
+        setIsLocalMode(true);
+        localStorage.setItem('siscopi_local_mode', 'true');
+        addNotification('A cota diária do banco de dados foi excedida. O sistema entrou em modo local para que você não perca nenhum dado!', 'error');
+      }
+    }
+  }, [isLocalMode]);
+
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -791,10 +811,10 @@ export default function App() {
       const activeVehicles = vehicleList.filter(v => v.status !== 'inactive');
       setVehicles(activeVehicles);
     }, (err) => {
-      console.error("Error fetching vehicles:", err);
+      handleSubscriptionError(err, "vehicles listener");
     });
     return () => unsubscribe();
-  }, [user]);
+  }, [user, isLocalMode]);
 
   useEffect(() => {
     if (!user) return;
@@ -806,10 +826,10 @@ export default function App() {
        const historyData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
        setStandaloneHistory(historyData);
     }, (error) => {
-       console.warn("Offline or Firestore subscription info: Error fetching standalone checklists:", error);
+       handleSubscriptionError(error, "standalone checklists listener");
     });
     return () => unsubscribe();
-  }, [user, isAdmin, standaloneHistoryLimit]);
+  }, [user, isAdmin, standaloneHistoryLimit, isLocalMode]);
 
   // Bootstrap vehicles if empty or settings updated and user is admin
   useEffect(() => {
@@ -841,10 +861,10 @@ export default function App() {
       });
       setCadastroVtrHistory(recordList);
     }, (error) => {
-      console.error("Error fetching Cadastro VTR history:", error);
+      handleSubscriptionError(error, "Cadastro VTR history listener");
     });
     return () => unsubscribe();
-  }, [user, activeTab, cadastroVtrView, isAdmin, cadastroVtrHistoryLimit]);
+  }, [user, activeTab, cadastroVtrView, isAdmin, cadastroVtrHistoryLimit, isLocalMode]);
 
   // Admin users listener (for Cadastro VTR admin view)
   useEffect(() => {
@@ -856,9 +876,11 @@ export default function App() {
         userList.push({ id: doc.id, ...doc.data() });
       });
       setAdminUsers(userList);
+    }, (error) => {
+      handleSubscriptionError(error, "admin users listener");
     });
     return () => unsubscribe();
-  }, [isAdmin, activeTab, cadastroVtrView]);
+  }, [isAdmin, activeTab, cadastroVtrView, isLocalMode]);
 
   const [notifications, setNotifications] = useState<{ id: string; message: string; type: 'success' | 'error' | 'info' }[]>([]);
   const [persistentNotifications, setPersistentNotifications] = useState<AppNotification[]>([]);
@@ -900,11 +922,11 @@ export default function App() {
       });
       setPersistentNotifications(list);
     }, (error) => {
-      console.error("Error fetching persistent notifications:", error);
+      handleSubscriptionError(error, "persistent notifications listener");
     });
     
     return () => unsubscribe();
-  }, [user]);
+  }, [user, isLocalMode]);
 
   const markNotificationAsRead = async (id: string) => {
     try {
@@ -2576,7 +2598,7 @@ export default function App() {
         }).catch(err => console.error("Error creating user doc:", err));
       }
     }, (error) => {
-      console.error("Error fetching user role:", error);
+      handleSubscriptionError(error, "user role listener");
     });
     return () => unsub();
   }, [user, isLocalMode]);
@@ -2691,7 +2713,7 @@ export default function App() {
         ).finally(() => setSettingsLoaded(true));
       }
     }, (error) => {
-      console.warn("Offline or Firestore subscription info: Error loading settings lists:", error);
+      handleSubscriptionError(error, "settings lists listener");
       setSettingsLoaded(true);
     });
 
@@ -2732,7 +2754,7 @@ export default function App() {
           return combined;
         });
       }, (error) => {
-        console.warn(`Offline or Firestore subscription info: Error monitoring history for ${collName}:`, error);
+        handleSubscriptionError(error, `history listener for ${collName}`);
       });
       unsubscribes.push(unsub);
     });
@@ -3847,6 +3869,17 @@ export default function App() {
             {loginLoading ? "Acessando..." : "Entrar com Google"}
           </button>
 
+          {/* Fallback to local guest option if quota or auth has issues */}
+          <div className="mt-4">
+            <button
+              onClick={handleLocalLogin}
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/10 dark:hover:bg-slate-900/20 text-slate-600 dark:text-slate-300 border-2 border-dashed border-slate-200 rounded-2xl font-black text-xs uppercase tracking-wider transition-all"
+            >
+              <ShieldAlert size={16} className="text-amber-500" />
+              <span>Entrar no Modo Local (Offline)</span>
+            </button>
+          </div>
+
 
 
           {authError && (
@@ -4236,6 +4269,62 @@ export default function App() {
 
         {/* Main Content */}
         <main className="p-3 sm:p-6 max-w-5xl mx-auto">
+          {/* Quota Exceeded & Local Fallback Alert Banner */}
+          {isQuotaExceeded && (
+            <div className="mb-6 p-5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-l-4 border-amber-500 dark:border-amber-600 rounded-2xl shadow-sm flex flex-col sm:flex-row items-start gap-4 animate-in slide-in-from-top-4 duration-300 relative overflow-hidden">
+              <div className="p-2.5 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl">
+                <AlertTriangle size={24} className="animate-pulse" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <h4 className="text-sm font-black text-amber-900 dark:text-amber-200 tracking-tight">
+                  Cota Diária Excedida &amp; Modo Local Ativo
+                </h4>
+                <p className="text-xs text-amber-700 dark:text-amber-300 font-medium leading-relaxed">
+                  A cota diária gratuita de leitura do banco de dados Firestore para este projeto foi atingida (limite do plano Spark). O SisCOpI mudou automaticamente para o <strong>Modo Local / Offline</strong> para garantir que você possa continuar usando o sistema perfeitamente!
+                </p>
+                <ul className="text-xs text-amber-700 dark:text-amber-300 list-disc pl-5 space-y-1 font-medium">
+                  <li>Suas novas viaturas, checklists, e lançamentos serão salvos com segurança no armazenamento do seu navegador (localStorage).</li>
+                  <li>Os relatórios, pesquisas de veículos e visualizações de PDF funcionam normalmente com os dados locais.</li>
+                  <li>A cota de leitura do plano gratuito do Firestore reinicia automaticamente no início de cada dia.</li>
+                </ul>
+                <div className="pt-2 flex flex-wrap gap-3">
+                  <a
+                    href="https://console.firebase.google.com/project/gen-lang-client-0327127735/firestore/databases/ai-studio-fcc7711e-0d32-48e9-8ea4-9f8756863fab/data?openUpgradeDialog=true"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black transition-all shadow-sm shadow-amber-200 dark:shadow-none active:scale-95"
+                  >
+                    <span>Gerenciar Cota no Firebase</span>
+                    <ExternalLink size={12} />
+                  </a>
+                  <button
+                    onClick={() => {
+                      setIsQuotaExceeded(false);
+                      localStorage.removeItem('siscopi_quota_exceeded');
+                      setIsLocalMode(false);
+                      localStorage.removeItem('siscopi_local_mode');
+                      window.location.reload();
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-slate-800 hover:bg-amber-100 dark:hover:bg-slate-700 border border-amber-200 dark:border-slate-700 text-amber-800 dark:text-amber-300 rounded-xl text-xs font-black transition-all active:scale-95"
+                  >
+                    <RefreshCw size={12} />
+                    <span>Testar Conexão Novamente</span>
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsQuotaExceeded(false);
+                  localStorage.removeItem('siscopi_quota_exceeded');
+                }}
+                className="absolute top-3 right-3 text-amber-500 hover:text-amber-700 dark:hover:text-amber-300 p-1 rounded-lg transition-colors"
+                title="Dispensar aviso visual"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
             {activeTab === 'dashboard' && (
               <motion.div 
