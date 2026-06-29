@@ -849,6 +849,8 @@ export default function App() {
   
   // --- Cadastro VTR State ---
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehiclesLimit, setVehiclesLimit] = useState<number>(5);
+  const [hasMoreVehicles, setHasMoreVehicles] = useState<boolean>(false);
   const [standaloneHistoryLimit, setStandaloneHistoryLimit] = useState(10);
   const [cadastroVtrHistoryLimit, setCadastroVtrHistoryLimit] = useState(10);
   const [cadastroVtrHistory, setCadastroVtrHistory] = useState<RecordEntry[]>([]);
@@ -962,14 +964,28 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     if (isLocalMode) return;
-    const unsubscribe = onSnapshot(collection(db, 'vehicles'), (snapshot) => {
+    
+    // Query vehicles with limit and check if there are more
+    const q = query(
+      collection(db, 'vehicles'),
+      orderBy('prefix'),
+      limit(vehiclesLimit + 1)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const vehicleList: Vehicle[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data() as Vehicle;
         vehicleList.push({ id: doc.id, ...data } as Vehicle);
       });
 
-      
+      if (vehicleList.length > vehiclesLimit) {
+        setHasMoreVehicles(true);
+        vehicleList.pop(); // Remove the extra vehicle
+      } else {
+        setHasMoreVehicles(false);
+      }
+
       // Filter out inactive vehicles for the main UI
       const activeVehicles = vehicleList.filter(v => v.status !== 'inactive');
       setVehicles(activeVehicles);
@@ -977,7 +993,7 @@ export default function App() {
       handleSubscriptionError(err, "vehicles listener");
     });
     return () => unsubscribe();
-  }, [user, isLocalMode]);
+  }, [user, isLocalMode, vehiclesLimit]);
 
   useEffect(() => {
     if (!user) return;
@@ -6185,6 +6201,8 @@ export default function App() {
                   user={user}
                   isAdmin={isAdmin}
                   vehicles={vehicles}
+                  hasMoreVehicles={hasMoreVehicles}
+                  onLoadMoreVehicles={() => setVehiclesLimit(prev => prev + 5)}
                   history={cadastroVtrHistory}
                   hasMore={cadastroVtrHistory.length === cadastroVtrHistoryLimit}
                   onLoadMore={() => setCadastroVtrHistoryLimit(prev => prev + 10)}
@@ -8024,6 +8042,8 @@ function CadastroVTR({
   user, 
   isAdmin, 
   vehicles, 
+  hasMoreVehicles,
+  onLoadMoreVehicles,
   history, 
   hasMore,
   onLoadMore,
@@ -8069,6 +8089,8 @@ function CadastroVTR({
   user: User | null;
   isAdmin: boolean;
   vehicles: Vehicle[];
+  hasMoreVehicles?: boolean;
+  onLoadMoreVehicles?: () => void;
   history: RecordEntry[];
   hasMore?: boolean;
   onLoadMore?: () => void;
@@ -8534,6 +8556,26 @@ function CadastroVTR({
                 </div>
               )}
             </div>
+
+            {hasMoreVehicles && (
+              <div className="flex flex-col items-center justify-center gap-3 mt-8 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none">
+                  Exibindo as primeiras {vehicles.length} viaturas
+                </p>
+                <button
+                  type="button"
+                  onClick={onLoadMoreVehicles}
+                  className="px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 transition-all duration-300 text-sm tracking-wide cursor-pointer flex items-center gap-2"
+                >
+                  Carregar Mais Viaturas
+                </button>
+                {searchTerm && (
+                  <p className="text-[11px] text-slate-400 font-medium text-center">
+                    Caso a viatura procurada não esteja acima, clique em <strong>Carregar Mais</strong> para expandir a busca.
+                  </p>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
 
