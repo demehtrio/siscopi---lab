@@ -850,7 +850,6 @@ export default function App() {
   // --- Cadastro VTR State ---
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [vehiclesLimit, setVehiclesLimit] = useState<number>(5);
-  const [hasMoreVehicles, setHasMoreVehicles] = useState<boolean>(false);
   const [standaloneHistoryLimit, setStandaloneHistoryLimit] = useState(10);
   const [cadastroVtrHistoryLimit, setCadastroVtrHistoryLimit] = useState(10);
   const [cadastroVtrHistory, setCadastroVtrHistory] = useState<RecordEntry[]>([]);
@@ -865,6 +864,26 @@ export default function App() {
     start: format(new Date(), 'yyyy-MM-dd'),
     end: format(new Date(), 'yyyy-MM-dd')
   });
+
+  const hasMoreVehicles = React.useMemo(() => {
+    const count = vehicles.filter(v => {
+      const plate = (v.plate || '').toLowerCase();
+      const model = (v.model || '').toLowerCase();
+      const prefix = (v.prefix || '').toLowerCase();
+      const search = (cadastroVtrSearchTerm || '').toLowerCase();
+      
+      const matchesSearch = plate.includes(search) || 
+                           model.includes(search) ||
+                           prefix.includes(search);
+      const matchesStatus = cadastroVtrStatusFilter === 'all' || v.status === cadastroVtrStatusFilter;
+      return matchesSearch && matchesStatus;
+    }).length;
+
+    if (cadastroVtrSearchTerm) {
+      return false;
+    }
+    return count > vehiclesLimit;
+  }, [vehicles, vehiclesLimit, cadastroVtrSearchTerm, cadastroVtrStatusFilter]);
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
@@ -965,11 +984,11 @@ export default function App() {
     if (!user) return;
     if (isLocalMode) return;
     
-    // Query vehicles with limit and check if there are more
+    // Subscribe to all vehicles so we can calculate complete fleet statistics
+    // and allow searching across the entire fleet in-memory on the client.
     const q = query(
       collection(db, 'vehicles'),
-      orderBy('prefix'),
-      limit(vehiclesLimit + 1)
+      orderBy('prefix')
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -979,13 +998,6 @@ export default function App() {
         vehicleList.push({ id: doc.id, ...data } as Vehicle);
       });
 
-      if (vehicleList.length > vehiclesLimit) {
-        setHasMoreVehicles(true);
-        vehicleList.pop(); // Remove the extra vehicle
-      } else {
-        setHasMoreVehicles(false);
-      }
-
       // Filter out inactive vehicles for the main UI
       const activeVehicles = vehicleList.filter(v => v.status !== 'inactive');
       setVehicles(activeVehicles);
@@ -993,7 +1005,7 @@ export default function App() {
       handleSubscriptionError(err, "vehicles listener");
     });
     return () => unsubscribe();
-  }, [user, isLocalMode, vehiclesLimit]);
+  }, [user, isLocalMode]);
 
   useEffect(() => {
     if (!user) return;
@@ -6201,6 +6213,7 @@ export default function App() {
                   user={user}
                   isAdmin={isAdmin}
                   vehicles={vehicles}
+                  vehiclesLimit={vehiclesLimit}
                   hasMoreVehicles={hasMoreVehicles}
                   onLoadMoreVehicles={() => setVehiclesLimit(prev => prev + 5)}
                   history={cadastroVtrHistory}
@@ -8042,6 +8055,7 @@ function CadastroVTR({
   user, 
   isAdmin, 
   vehicles, 
+  vehiclesLimit,
   hasMoreVehicles,
   onLoadMoreVehicles,
   history, 
@@ -8089,6 +8103,7 @@ function CadastroVTR({
   user: User | null;
   isAdmin: boolean;
   vehicles: Vehicle[];
+  vehiclesLimit?: number;
   hasMoreVehicles?: boolean;
   onLoadMoreVehicles?: () => void;
   history: RecordEntry[];
@@ -8171,6 +8186,14 @@ function CadastroVTR({
     const matchesStatus = statusFilter === 'all' || v.status === statusFilter;
     return matchesSearch && matchesStatus;
   }), [vehicles, searchTerm, statusFilter]);
+
+  const displayedVehicles = React.useMemo(() => {
+    // If searching, show all matching results so the searched vehicle appears immediately!
+    if (searchTerm) {
+      return filteredVehicles;
+    }
+    return filteredVehicles.slice(0, vehiclesLimit || 5);
+  }, [filteredVehicles, vehiclesLimit, searchTerm]);
 
 
 
@@ -8535,7 +8558,7 @@ function CadastroVTR({
 
             {/* Vehicle Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredVehicles.map((vehicle: any) => (
+              {displayedVehicles.map((vehicle: any) => (
                 <VehicleCard 
                   key={vehicle.id} 
                   vehicle={vehicle} 
@@ -8546,7 +8569,7 @@ function CadastroVTR({
                   submitting={submitting}
                 />
               ))}
-              {filteredVehicles.length === 0 && (
+              {displayedVehicles.length === 0 && (
                 <div className="col-span-full py-20 text-center bg-white rounded-[2.5rem] border border-dashed border-slate-300">
                   <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Search className="text-slate-300" size={40} />
@@ -8560,7 +8583,7 @@ function CadastroVTR({
             {hasMoreVehicles && (
               <div className="flex flex-col items-center justify-center gap-3 mt-8 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none">
-                  Exibindo as primeiras {vehicles.length} viaturas
+                  Exibindo {displayedVehicles.length} de {filteredVehicles.length} viaturas
                 </p>
                 <button
                   type="button"
@@ -8569,11 +8592,6 @@ function CadastroVTR({
                 >
                   Carregar Mais Viaturas
                 </button>
-                {searchTerm && (
-                  <p className="text-[11px] text-slate-400 font-medium text-center">
-                    Caso a viatura procurada não esteja acima, clique em <strong>Carregar Mais</strong> para expandir a busca.
-                  </p>
-                )}
               </div>
             )}
           </motion.div>
