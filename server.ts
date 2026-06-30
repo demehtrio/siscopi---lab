@@ -39,16 +39,33 @@ async function startServer() {
       });
 
       // Map roles from UI ("user" and "assistant") to Gemini format ("user" and "model")
+      // and ensure turns alternate strictly by merging consecutive turns of the same role.
       const contents: any[] = [];
       if (history && Array.isArray(history)) {
         for (const msg of history) {
-          contents.push({
-            role: msg.role === "assistant" ? "model" : "user",
-            parts: [{ text: msg.content }],
-          });
+          if (!msg.content || typeof msg.content !== "string") continue;
+          
+          const role = msg.role === "assistant" ? "model" : "user";
+          const lastTurn = contents[contents.length - 1];
+          
+          if (lastTurn && lastTurn.role === role) {
+            lastTurn.parts.push({ text: msg.content });
+          } else {
+            contents.push({
+              role: role,
+              parts: [{ text: msg.content }],
+            });
+          }
         }
       }
-      contents.push({ role: "user", parts: [{ text: prompt }] });
+
+      // Append the current user prompt
+      const lastTurn = contents[contents.length - 1];
+      if (lastTurn && lastTurn.role === "user") {
+        lastTurn.parts.push({ text: prompt });
+      } else {
+        contents.push({ role: "user", parts: [{ text: prompt }] });
+      }
 
       const systemInstruction = `Você é o Assistente SisCOpI AI, um assistente digital inteligente integrado ao Sistema de Cadastramento Operacional Integrado (SisCOpI).
 O SisCOpI é utilizado para gestão de efetivo, cadastro de viaturas (VTR), checklist de viaturas e controle operacional das escalas e lançamentos.

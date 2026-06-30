@@ -755,9 +755,21 @@ export default function App() {
         })
       });
 
-      const data = await response.json();
+      let data: any = {};
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText || `Erro no servidor (Código: ${response.status})`);
+      }
+
       if (!response.ok) {
         throw new Error(data.error || 'Erro ao processar mensagem.');
+      }
+
+      if (!data.text) {
+        throw new Error('O Assistente retornou uma resposta vazia.');
       }
 
       const assistantMessage = {
