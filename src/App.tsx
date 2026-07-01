@@ -4765,7 +4765,7 @@ export default function App() {
                 {/* Banners de Sistemas Externos */}
                 <div className="mt-8 flex flex-col gap-6">
                   {/* Banner GESTÃO DE SERVIÇOS (Base44) */}
-                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-[#083c5a] via-[#052335] to-[#020e16] text-white rounded-2xl border border-[#083c5a]/40 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
+                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-[#3e444b] via-[#24272c] to-[#121416] text-white rounded-2xl border border-[#3e444b]/40 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
                     {/* Decorative background visual elements */}
                     <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
                     
@@ -4800,7 +4800,7 @@ export default function App() {
                   </div>
 
                   {/* Banner ESCALAS PMPE */}
-                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-[#083c5a] via-[#052335] to-[#020e16] text-white rounded-2xl border border-[#083c5a]/40 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
+                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-[#3e444b] via-[#24272c] to-[#121416] text-white rounded-2xl border border-[#3e444b]/40 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
                     {/* Decorative background visual elements */}
                     <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
                     
@@ -4835,7 +4835,7 @@ export default function App() {
                   </div>
 
                   {/* Banner AUTOVISION */}
-                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-[#083c5a] via-[#052335] to-[#020e16] text-white rounded-2xl border border-[#083c5a]/40 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
+                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-[#3e444b] via-[#24272c] to-[#121416] text-white rounded-2xl border border-[#3e444b]/40 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
                     {/* Decorative background visual elements */}
                     <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
                     
@@ -4874,7 +4874,7 @@ export default function App() {
                   </div>
 
                   {/* Banner E-MAIL INSTITUCIONAL */}
-                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-[#083c5a] via-[#052335] to-[#020e16] text-white rounded-2xl border border-[#083c5a]/40 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
+                  <div className="p-4 sm:px-6 sm:py-4 bg-gradient-to-br from-[#3e444b] via-[#24272c] to-[#121416] text-white rounded-2xl border border-[#3e444b]/40 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 group">
                     {/* Decorative background visual elements */}
                     <div className="absolute top-0 right-0 p-16 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
                     
