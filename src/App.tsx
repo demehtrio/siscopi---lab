@@ -913,7 +913,6 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string, type: 'vehicle' | 'admin', label?: string } | null>(null);
   const [maintenanceModal, setMaintenanceModal] = useState<{ vehicle: Vehicle, notes: string } | null>(null);
-  const [currentCadastroVtrTab, setCurrentCadastroVtrTab] = useState<number>(0);
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
   const [clearingHistory, setClearingHistory] = useState(false);
   const [isExtractingPlate, setIsExtractingPlate] = useState(false);
@@ -1803,8 +1802,6 @@ export default function App() {
     setSelectedVehicle(vehicle);
     setOperationType(type);
     setCadastroVtrView('form');
-    // Para check-in (Retorno), abre direto na tela de quilometragem (aba 2)
-    setCurrentCadastroVtrTab(type === 'check-in' ? 2 : 0);
     
     // Set initial data immediately for best UX
     setCadastroVtrFormData({
@@ -2310,7 +2307,6 @@ export default function App() {
         // Reset form
         setSelectedVehicle(null);
         setOperationType(null);
-        setCurrentCadastroVtrTab(0);
         setActiveTab('cadastro_vtr');
         setCadastroVtrView('list');
         setCadastroVtrStatusFilter(operationType === 'check-out' ? 'in_use' : 'available');
@@ -2387,7 +2383,6 @@ export default function App() {
       // Reset form
       setSelectedVehicle(null);
       setOperationType(null);
-      setCurrentCadastroVtrTab(0);
       
       // Forces redirection to the fleet list (Em Uso filter if was check-out, Available if was check-in)
       setActiveTab('cadastro_vtr');
@@ -6259,8 +6254,6 @@ export default function App() {
                   setDateFilter={setCadastroVtrDateFilter}
                   onGeneratePDF={generateCadastroVtrHistoryPDF}
                   onGenerateDetailedPDF={generateDetailedChecklistPDF}
-                  currentTab={currentCadastroVtrTab}
-                  setCurrentTab={setCurrentCadastroVtrTab}
                   personnelList={personnelList}
                   prefixoVtList={prefixoVtList}
                   moList={moList}
@@ -8100,8 +8093,6 @@ function CadastroVTR({
   onGeneratePDF,
   maintenanceModal,
   setMaintenanceModal,
-  currentTab,
-  setCurrentTab,
   personnelList,
   prefixoVtList,
   moList,
@@ -8148,8 +8139,6 @@ function CadastroVTR({
   onGeneratePDF: () => void;
   maintenanceModal: { vehicle: Vehicle; notes: string } | null;
   setMaintenanceModal: (modal: { vehicle: Vehicle; notes: string } | null) => void;
-  currentTab: number;
-  setCurrentTab: (tab: number) => void;
   personnelList: string[];
   prefixoVtList: string[];
   moList: string[];
@@ -8300,106 +8289,108 @@ function CadastroVTR({
                 </div>
               </div>
 
-                  {/* Form Body - Multi-step Form */}
-                  <div className="p-8 sm:p-12 pb-32 sm:pb-32 flex-1 min-h-[400px]">
-                  <div className="flex gap-2 mb-8 bg-slate-50 p-1.5 rounded-2xl overflow-x-auto custom-scrollbar">
-                    {[
-                      { icon: <Siren size={18} />, label: 'Identificação' },
-                      { icon: <UserRound size={18} />, label: 'Condutor' },
-                      { icon: <RefreshCw size={18} />, label: 'Quilometragem' }
-                    ].map((step, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setCurrentTab(idx)}
-                        className={`flex-none flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${currentTab === idx ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                      >
-                        {step.icon}
-                        <span className="hidden sm:inline">{step.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <AnimatePresence mode="wait">
-                    <div className="min-h-[400px]">
-                      {currentTab === 0 && (
-                      <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <ChecklistSearchableSelect 
-                              label="Placa da Viatura"
-                              value={formData.identification.plate}
-                              onChange={(val: string) => {
-                                const vehicle = vehicles.find((v: Vehicle) => v.plate === val);
-                                setFormData({
-                                  ...formData, 
-                                  identification: {
-                                    ...formData.identification, 
-                                    plate: val, 
-                                    prefix: vehicle?.prefix || formData.identification.prefix,
-                                    model: vehicle?.model || formData.identification.model
-                                  }
-                                });
-                              }}
-                              options={vehicles.map((v: Vehicle) => v.plate)}
-                              placeholder="Selecione a placa..."
-                              variant="blue"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <ChecklistSearchableSelect 
-                              label="Patrimônio / Viatura"
-                              value={formData.identification.prefix}
-                              onChange={(val: string) => {
-                                const vehicle = vehicles.find((v: Vehicle) => v.prefix === val);
-                                setFormData({
-                                  ...formData, 
-                                  identification: {
-                                    ...formData.identification, 
-                                    prefix: val, 
-                                    plate: vehicle?.plate || formData.identification.plate,
-                                    model: vehicle?.model || formData.identification.model
-                                  }
-                                });
-                              }}
-                              options={vehicles.map((v: Vehicle) => v.prefix)}
-                              placeholder="Selecione a viatura..."
-                              variant="blue"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <ChecklistSearchableSelect 
-                              label="Prefixo Operacional (Efetivo)"
-                              value={formData.identification.operationalPrefix}
-                              onChange={(val: string) => setFormData({...formData, identification: {...formData.identification, operationalPrefix: val}})}
-                              options={[...prefixoVtList, ...moList]}
-                              placeholder="Selecione o Prefixo..."
-                              variant="blue"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-sm font-black text-slate-700 uppercase tracking-wider ml-1">Data do Registro</label>
-                            <input 
-                              type="date"
-                              value={formData.identification.date}
-                              onChange={(e) => setFormData({...formData, identification: {...formData.identification, date: e.target.value}})}
-                              className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-sm font-black text-slate-700 uppercase tracking-wider ml-1">Hora do Registro</label>
-                            <input 
-                              type="time"
-                              value={formData.identification.time}
-                              onChange={(e) => setFormData({...formData, identification: {...formData.identification, time: e.target.value}})}
-                              className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700"
-                            />
-                          </div>
+                  {/* Form Body - Unified Form */}
+                  <div className="p-8 sm:p-12 pb-32 sm:pb-32 flex-1 min-h-[400px] space-y-12">
+                    
+                    {/* Seção 1: Identificação */}
+                    <div className="bg-slate-50/50 p-6 sm:p-8 rounded-[2rem] border border-slate-100/80 space-y-6">
+                      <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                        <div className={`p-2.5 rounded-xl ${operationType === 'check-in' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                          <Siren size={20} />
                         </div>
-                      </motion.div>
-                    )}
+                        <div>
+                          <h4 className="text-base font-black text-slate-800 uppercase tracking-wider">1. Identificação da Viatura</h4>
+                          <p className="text-xs text-slate-500 font-medium">Selecione e confirme os dados básicos da viatura</p>
+                        </div>
+                      </div>
 
-                    {currentTab === 1 && (
-                      <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <ChecklistSearchableSelect 
+                            label="Placa da Viatura"
+                            value={formData.identification.plate}
+                            onChange={(val: string) => {
+                              const vehicle = vehicles.find((v: Vehicle) => v.plate === val);
+                              setFormData({
+                                ...formData, 
+                                identification: {
+                                  ...formData.identification, 
+                                  plate: val, 
+                                  prefix: vehicle?.prefix || formData.identification.prefix,
+                                  model: vehicle?.model || formData.identification.model
+                                }
+                              });
+                            }}
+                            options={vehicles.map((v: Vehicle) => v.plate)}
+                            placeholder="Selecione a placa..."
+                            variant="blue"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <ChecklistSearchableSelect 
+                            label="Patrimônio / Viatura"
+                            value={formData.identification.prefix}
+                            onChange={(val: string) => {
+                              const vehicle = vehicles.find((v: Vehicle) => v.prefix === val);
+                              setFormData({
+                                ...formData, 
+                                identification: {
+                                  ...formData.identification, 
+                                  prefix: val, 
+                                  plate: vehicle?.plate || formData.identification.plate,
+                                  model: vehicle?.model || formData.identification.model
+                                }
+                              });
+                            }}
+                            options={vehicles.map((v: Vehicle) => v.prefix)}
+                            placeholder="Selecione a viatura..."
+                            variant="blue"
+                          />
+                        </div>
+                        <div className="space-y-2 col-span-1">
+                          <ChecklistSearchableSelect 
+                            label="Prefixo Operacional (Efetivo)"
+                            value={formData.identification.operationalPrefix}
+                            onChange={(val: string) => setFormData({...formData, identification: {...formData.identification, operationalPrefix: val}})}
+                            options={[...prefixoVtList, ...moList]}
+                            placeholder="Selecione o Prefixo..."
+                            variant="blue"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-black text-slate-700 uppercase tracking-wider ml-1">Data do Registro</label>
+                          <input 
+                            type="date"
+                            value={formData.identification.date}
+                            onChange={(e) => setFormData({...formData, identification: {...formData.identification, date: e.target.value}})}
+                            className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700"
+                          />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
+                          <label className="text-sm font-black text-slate-700 uppercase tracking-wider ml-1">Hora do Registro</label>
+                          <input 
+                            type="time"
+                            value={formData.identification.time}
+                            onChange={(e) => setFormData({...formData, identification: {...formData.identification, time: e.target.value}})}
+                            className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Seção 2: Condutor */}
+                    <div className="bg-slate-50/50 p-6 sm:p-8 rounded-[2rem] border border-slate-100/80 space-y-6">
+                      <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                        <div className={`p-2.5 rounded-xl ${operationType === 'check-in' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                          <UserRound size={20} />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-black text-slate-800 uppercase tracking-wider">2. Condutor Responsável</h4>
+                          <p className="text-xs text-slate-500 font-medium">Informe quem está assumindo/devolvendo a viatura</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <ChecklistSearchableSelect 
                             label="Motorista Responsável / Matrícula"
@@ -8420,91 +8411,83 @@ function CadastroVTR({
                             variant="blue"
                           />
                         </div>
-                      </motion.div>
-                    )}
+                      </div>
+                    </div>
 
-                    {currentTab === 2 && (
-                      <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                        <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex items-center gap-4">
+                    {/* Seção 3: Quilometragem e Observações */}
+                    <div className="bg-slate-50/50 p-6 sm:p-8 rounded-[2rem] border border-slate-100/80 space-y-6">
+                      <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                        <div className={`p-2.5 rounded-xl ${operationType === 'check-in' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                          <RefreshCw size={20} />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-black text-slate-800 uppercase tracking-wider">3. Quilometragem e Observações</h4>
+                          <p className="text-xs text-slate-500 font-medium">Informe a quilometragem atualizada do painel e avarias, se houver</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="bg-blue-50/60 p-5 rounded-[2rem] border border-blue-100/50 flex items-center gap-4 sm:col-span-2">
                           <div className="bg-blue-600 p-3 rounded-2xl text-white">
                             <RefreshCw size={24} />
                           </div>
                           <div>
-                            <p className="text-sm font-black text-blue-700 uppercase tracking-wider">KM Anterior</p>
-                            <p className="text-2xl font-black text-blue-900">{selectedVehicle?.lastMileage} <span className="text-sm font-bold opacity-60">km</span></p>
+                            <p className="text-xs font-black text-blue-700 uppercase tracking-wider">KM Anterior Registrado</p>
+                            <p className="text-2xl font-black text-blue-900">{selectedVehicle?.lastMileage} <span className="text-xs font-bold opacity-60">km</span></p>
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <label className="text-sm font-black text-slate-700 uppercase tracking-wider ml-1">Quilometragem Atual</label>
+                        <div className="space-y-2 sm:col-span-2">
+                          <label className="text-sm font-black text-slate-700 uppercase tracking-wider ml-1">Quilometragem Atual <span className="text-rose-500">*</span></label>
                           <input 
                             type="number"
                             placeholder="Digite a KM do painel..."
                             value={formData.mileage.currentMileage}
                             onChange={(e) => setFormData({...formData, mileage: {...formData.mileage, currentMileage: e.target.value === '' ? '' : Number(e.target.value)}})}
-                            className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-200 rounded-3xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none font-black text-3xl text-slate-900 transition-all"
+                            className="w-full px-6 py-5 bg-white border-2 border-slate-200 rounded-3xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none font-black text-3xl text-slate-900 transition-all"
                           />
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-2 sm:col-span-2">
                           <label className="text-sm font-black text-slate-700 uppercase tracking-wider ml-1">Observações / Avarias</label>
                           <textarea 
                             placeholder="Descreva aqui qualquer detalhe adicional, avarias em lataria, vidros, bancos, etc."
                             value={formData.checklist.descricaoAlteracoes}
                             onChange={(e) => setFormData({...formData, checklist: {...formData.checklist, descricaoAlteracoes: e.target.value}})}
-                            className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-700 min-h-[100px]"
+                            className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-700 min-h-[100px]"
                           />
                         </div>
-                      </motion.div>
-                    )}
+                      </div>
                     </div>
-                  </AnimatePresence>
-                </div>
+
+                  </div>
 
                 <div className="p-6 sm:p-10 bg-slate-50/90 backdrop-blur-md border-t border-slate-100 flex flex-col sm:flex-row gap-4 sticky bottom-[72px] md:bottom-0 z-20">
-                  {currentTab > 0 ? (
-                    <button 
-                      onClick={() => setCurrentTab(currentTab - 1)}
-                      className="w-full sm:flex-1 py-4 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold hover:bg-slate-100 transition-all"
-                    >
-                      Voltar
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => onStartRecord(null, null)}
-                      className="w-full sm:flex-1 py-4 bg-white text-slate-500 border border-slate-200 rounded-2xl font-bold hover:bg-slate-100 transition-all"
-                    >
-                      Cancelar
-                    </button>
-                  )}
+                  <button 
+                    onClick={() => onStartRecord(null, null)}
+                    className="w-full sm:flex-1 py-4 bg-white text-slate-500 border border-slate-200 rounded-2xl font-bold hover:bg-slate-100 transition-all"
+                  >
+                    Cancelar
+                  </button>
                   
-                  {currentTab < 2 ? (
-                    <button 
-                      onClick={() => setCurrentTab(currentTab + 1)}
-                      className="w-full sm:flex-[2] py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl active:scale-95"
-                    >
-                      Próximo Passo
-                    </button>
-                  ) : (
-                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:flex-[2]">
+                  <div className="flex flex-col sm:flex-row gap-3 w-full sm:flex-[2]">
                     <button 
                       onClick={() => onSaveRecord(true)}
-                        disabled={submitting || formData.mileage.currentMileage === ''}
-                        className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                      >
-                        {submitting ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                        Apenas Salvar
-                      </button>
-                      <button 
-                        onClick={() => onSaveRecord()}
-                        disabled={submitting || formData.mileage.currentMileage === ''}
-                        className={`flex-[1.5] py-4 text-white rounded-2xl font-bold transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 ${operationType === 'check-in' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
-                      >
-                        {submitting ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
-                        Salvar e Enviar WhatsApp
-                      </button>
-                    </div>
-                  )}
+                      disabled={submitting || formData.mileage.currentMileage === ''}
+                      className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {submitting ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                      Apenas Salvar
+                    </button>
+                    <button 
+                      onClick={() => onSaveRecord()}
+                      disabled={submitting || formData.mileage.currentMileage === ''}
+                      className={`flex-[1.5] py-4 text-white rounded-2xl font-bold transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 ${operationType === 'check-in' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+                    >
+                      {submitting ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
+                      Salvar e Enviar WhatsApp
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
