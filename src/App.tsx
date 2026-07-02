@@ -1019,6 +1019,44 @@ export default function App() {
     return () => unsubscribe();
   }, [user, isLocalMode]);
 
+  // One-time correction effect for VTR 640158 (SOJ6C78) to set mileage to 19144
+  useEffect(() => {
+    if (!user) return;
+    
+    const targetVehicleId = 'SOJ6C78';
+    const targetMileage = 19144;
+
+    if (isLocalMode) {
+      const localVehiclesStr = localStorage.getItem('siscopi_vehicles');
+      if (localVehiclesStr) {
+        try {
+          const localVehicles = JSON.parse(localVehiclesStr) as Vehicle[];
+          const vehicleIndex = localVehicles.findIndex(v => v.id === targetVehicleId || v.plate === targetVehicleId);
+          if (vehicleIndex !== -1 && localVehicles[vehicleIndex].lastMileage !== targetMileage) {
+            localVehicles[vehicleIndex].lastMileage = targetMileage;
+            localStorage.setItem('siscopi_vehicles', JSON.stringify(localVehicles));
+            setVehicles(localVehicles);
+            console.log(`[VTR Correction] Updated local VTR 640158 lastMileage to ${targetMileage}`);
+          }
+        } catch (e) {
+          console.error("Error updating local vehicle mileage:", e);
+        }
+      }
+    } else {
+      const vehicle = vehicles.find(v => v.id === targetVehicleId || v.plate === targetVehicleId);
+      if (vehicle && vehicle.lastMileage !== targetMileage) {
+        const vehicleRef = doc(db, 'vehicles', targetVehicleId);
+        updateDoc(vehicleRef, { lastMileage: targetMileage })
+          .then(() => {
+            console.log(`[VTR Correction] Updated Firestore VTR 640158 lastMileage to ${targetMileage}`);
+          })
+          .catch((err) => {
+            console.error("Error updating Firestore vehicle mileage:", err);
+          });
+      }
+    }
+  }, [user, vehicles, isLocalMode]);
+
   useEffect(() => {
     if (!user) return;
     if (isLocalMode) return;
@@ -1417,7 +1455,7 @@ export default function App() {
             model: correctedModel,
             category: type === 'mo' ? 'moto' : 'car',
             status: 'available',
-            lastMileage: 0,
+            lastMileage: vehicleId === 'SOJ6C78' ? 19144 : 0,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           });
@@ -1576,7 +1614,7 @@ export default function App() {
           await setDoc(docRef, { 
             ...vehicleData, 
             status: 'available',
-            lastMileage: 0,
+            lastMileage: vehicleId === 'SOJ6C78' ? 19144 : 0,
             createdAt: serverTimestamp()
           });
         }
