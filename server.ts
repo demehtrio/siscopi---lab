@@ -87,10 +87,141 @@ Instruções:
 
       res.json({ text: response.text });
     } catch (error: any) {
-      console.error("Gemini API Error:", error);
+      console.error("=== EXPRESS GEMINI API ERROR ===");
+      console.error("Message:", error?.message);
+      console.error("Stack:", error?.stack);
+      if (error?.status) console.error("HTTP Status Code:", error.status);
+      if (error?.statusCode) console.error("HTTP Status Code (alt):", error.statusCode);
+      if (error?.cause) console.error("Cause/Root Error:", error.cause);
+      try {
+        console.error("Detailed Error JSON:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      } catch (jsonErr) {
+        console.error("Could not serialize error object. Raw error:", error);
+      }
+      console.error("=================================");
+
       res.status(500).json({ 
-        error: error?.message || "Ocorreu um erro de comunicação com o servidor do Gemini." 
+        error: error?.message || "Ocorreu um erro de comunicação com o servidor do Gemini.",
+        details: error?.stack || String(error)
       });
+    }
+  });
+
+  // Endpoint to parse checklist description
+  app.post("/api/gemini/parse-checklist", async (req, res) => {
+    try {
+      const { description } = req.body;
+      if (!description) {
+        return res.status(400).json({ error: "A descrição é obrigatória." });
+      }
+
+      const key = process.env.GEMINI_API_KEY;
+      if (!key) {
+        return res.status(400).json({ 
+          error: "Chave do Gemini API não configurada." 
+        });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey: key,
+        httpOptions: {
+          headers: {
+            "User-Agent": "aistudio-build",
+          },
+        },
+      });
+
+      const prompt = `
+        Analise a seguinte descrição de estado de uma viatura policial e extraia as informações para um checklist.
+        Retorne APENAS um objeto JSON com os campos que encontrar.
+        
+        Campos possíveis:
+        - mapaDiario: 'SIM' ou 'NÃO'
+        - equipamentos: array de strings (ex: ["Giroflex", "Sirene"])
+        - luzFarolAlto, luzFarolBaixo, luzLanterna, luzPlaca: 'Todos funcionam', 'Direito queimado', 'Esquerdo queimado', 'Todas queimados', 'Funciona', 'Queimada'
+        - luzFreioLanternaTraseira: array de strings (ex: ["TODAS FUNCIONANDO", "Luz de Freio Dir. Queimada"])
+        - pneus: 'Novo', 'Meia vida', 'Inutilizável (Motivo de baixa)'
+        - sistemaFreio: 'Freio funcionando', 'Freio falhando', 'Sem Freios (Motivo de baixa)'
+        - oleoMotor: 'Nível Normal', 'Nível Baixo', 'Nível sem condições (Baixar VTR)'
+        - proxTrocaOleoKm: string com o KM
+        - partesInternas: array de strings (ex: ["SEM ALTERAÇÃO", "BANCOS"])
+        - partesExternas: array de strings (ex: ["Sem Alteração", "PINTURA"])
+        - sistemaTracao: 'Kit de tração em condições', 'Kit de tração desgastado', 'Kit de tração sem condições (Baixar VTR)'
+        - limpeza: 'SIM' ou 'NÃO'
+        - descricaoAlteracoes: string com detalhes adicionais
+        
+        Descrição: "${description}"
+      `;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+        },
+      });
+
+      res.json(JSON.parse(response.text || "{}"));
+    } catch (error: any) {
+      console.error("Parse Checklist Error:", error);
+      res.status(500).json({ error: error?.message || "Erro ao processar checklist." });
+    }
+  });
+
+  // Endpoint to extract license plate from base64 image
+  app.post("/api/gemini/extract-plate", async (req, res) => {
+    try {
+      const { base64Image } = req.body;
+      if (!base64Image) {
+        return res.status(400).json({ error: "A imagem é obrigatória." });
+      }
+
+      const key = process.env.GEMINI_API_KEY;
+      if (!key) {
+        return res.status(400).json({ 
+          error: "Chave do Gemini API não configurada." 
+        });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey: key,
+        httpOptions: {
+          headers: {
+            "User-Agent": "aistudio-build",
+          },
+        },
+      });
+
+      const prompt = "Identifique a placa da viatura nesta imagem. Retorne APENAS a placa (ex: ABC1D23) ou a palavra 'NONE' se não encontrar.";
+
+      let rawBase64 = base64Image;
+      let mimeType = "image/jpeg";
+      if (base64Image.includes(",")) {
+        const parts = base64Image.split(",");
+        rawBase64 = parts[1];
+        const match = parts[0].match(/data:(.*?);base64/);
+        if (match) {
+          mimeType = match[1];
+        }
+      }
+
+      const imagePart = {
+        inlineData: {
+          data: rawBase64,
+          mimeType: mimeType,
+        },
+      };
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: [prompt, imagePart],
+      });
+
+      const plate = (response.text || "").trim().toUpperCase();
+      res.json({ plate });
+    } catch (error: any) {
+      console.error("Extract Plate Error:", error);
+      res.status(500).json({ error: error?.message || "Erro ao extrair placa." });
     }
   });
 

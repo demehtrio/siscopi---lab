@@ -467,14 +467,14 @@ export default function InsideQSH({ user, isAdmin, isLocalMode, db }: InsideQSHP
   const [isSyncingLocation, setIsSyncingLocation] = useState(false);
 
   // Custom API Key from env if any
-  const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_PLATFORM_KEY || '';
+  const GOOGLE_API_KEY = typeof process !== 'undefined' && process.env ? (process.env.GOOGLE_MAPS_PLATFORM_KEY || '') : '';
   const [customApiKey, setCustomApiKey] = useState(GOOGLE_API_KEY);
   const [isUsingCustomKey, setIsUsingCustomKey] = useState(Boolean(GOOGLE_API_KEY));
   const [googleMapsError, setGoogleMapsError] = useState<string | null>(null);
 
   // Sync Google Key detection
   useEffect(() => {
-    const key = process.env.GOOGLE_MAPS_PLATFORM_KEY || '';
+    const key = typeof process !== 'undefined' && process.env ? (process.env.GOOGLE_MAPS_PLATFORM_KEY || '') : '';
     if (key) {
       setCustomApiKey(key);
       setIsUsingCustomKey(true);

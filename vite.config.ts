@@ -102,17 +102,183 @@ Instruções:
                 res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify({ text: response.text }));
               } catch (err: any) {
-                console.error("Vite Gemini Plugin Execution Error:", err);
+                console.error("=== VITE GEMINI PLUGIN EXECUTION ERROR ===");
+                console.error("Message:", err?.message);
+                console.error("Stack:", err?.stack);
+                if (err?.status) console.error("HTTP Status Code:", err.status);
+                if (err?.statusCode) console.error("HTTP Status Code (alt):", err.statusCode);
+                if (err?.cause) console.error("Cause/Root Error:", err.cause);
+                try {
+                  console.error("Detailed Error JSON:", JSON.stringify(err, Object.getOwnPropertyNames(err), 2));
+                } catch (jsonErr) {
+                  console.error("Could not serialize error object. Raw error:", err);
+                }
+                console.error("==========================================");
+
                 res.statusCode = 500;
                 res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify({ error: err?.message || "Erro ao processar requisição do Gemini." }));
+                res.end(JSON.stringify({ 
+                  error: err?.message || "Erro ao processar requisição do Gemini.",
+                  details: err?.stack || String(err)
+                }));
               }
             });
           } catch (err: any) {
-            console.error("Vite Gemini Plugin Parse Error:", err);
+            console.error("=== VITE GEMINI PLUGIN PARSE ERROR ===");
+            console.error("Message:", err?.message);
+            console.error("Stack:", err?.stack);
+            try {
+              console.error("Detailed Error JSON:", JSON.stringify(err, Object.getOwnPropertyNames(err), 2));
+            } catch (jsonErr) {
+              console.error("Could not serialize error object. Raw error:", err);
+            }
+            console.error("======================================");
+
             res.statusCode = 500;
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify({ error: err?.message || "Erro ao receber dados." }));
+          }
+          return;
+        } else if (req.url === '/api/gemini/parse-checklist' && req.method === 'POST') {
+          try {
+            let body = '';
+            req.on('data', (chunk: any) => { body += chunk; });
+            req.on('end', async () => {
+              try {
+                const { description } = JSON.parse(body);
+                if (!description) {
+                  res.statusCode = 400;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ error: "A descrição é obrigatória." }));
+                  return;
+                }
+
+                const key = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+                if (!key) {
+                  res.statusCode = 400;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ error: "Chave do Gemini API não configurada." }));
+                  return;
+                }
+
+                const { GoogleGenAI } = await import("@google/genai");
+                const ai = new GoogleGenAI({
+                  apiKey: key,
+                  httpOptions: { headers: { "User-Agent": "aistudio-build" } },
+                });
+
+                const prompt = `
+                  Analise a seguinte descrição de estado de uma viatura policial e extraia as informações para um checklist.
+                  Retorne APENAS um objeto JSON com os campos que encontrar.
+                  
+                  Campos possíveis:
+                  - mapaDiario: 'SIM' ou 'NÃO'
+                  - equipamentos: array de strings (ex: ["Giroflex", "Sirene"])
+                  - luzFarolAlto, luzFarolBaixo, luzLanterna, luzPlaca: 'Todos funcionam', 'Direito queimado', 'Esquerdo queimado', 'Todas queimados', 'Funciona', 'Queimada'
+                  - luzFreioLanternaTraseira: array de strings (ex: ["TODAS FUNCIONANDO", "Luz de Freio Dir. Queimada"])
+                  - pneus: 'Novo', 'Meia vida', 'Inutilizável (Motivo de baixa)'
+                  - sistemaFreio: 'Freio funcionando', 'Freio falhando', 'Sem Freios (Motivo de baixa)'
+                  - oleoMotor: 'Nível Normal', 'Nível Baixo', 'Nível sem condições (Baixar VTR)'
+                  - proxTrocaOleoKm: string com o KM
+                  - partesInternas: array de strings (ex: ["SEM ALTERAÇÃO", "BANCOS"])
+                  - partesExternas: array de strings (ex: ["Sem Alteração", "PINTURA"])
+                  - sistemaTracao: 'Kit de tração em condições', 'Kit de tração desgastado', 'Kit de tração sem condições (Baixar VTR)'
+                  - limpeza: 'SIM' ou 'NÃO'
+                  - descricaoAlteracoes: string com detalhes adicionais
+                  
+                  Descrição: "${description}"
+                `;
+
+                const response = await ai.models.generateContent({
+                  model: "gemini-3.5-flash",
+                  contents: prompt,
+                  config: { responseMimeType: "application/json" },
+                });
+
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify(JSON.parse(response.text || "{}")));
+              } catch (err: any) {
+                console.error("Vite Parse Checklist Error:", err);
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: err?.message || "Erro no parse de checklist." }));
+              }
+            });
+          } catch (err: any) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: err?.message }));
+          }
+          return;
+        } else if (req.url === '/api/gemini/extract-plate' && req.method === 'POST') {
+          try {
+            let body = '';
+            req.on('data', (chunk: any) => { body += chunk; });
+            req.on('end', async () => {
+              try {
+                const { base64Image } = JSON.parse(body);
+                if (!base64Image) {
+                  res.statusCode = 400;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ error: "A imagem é obrigatória." }));
+                  return;
+                }
+
+                const key = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+                if (!key) {
+                  res.statusCode = 400;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ error: "Chave do Gemini API não configurada." }));
+                  return;
+                }
+
+                const { GoogleGenAI } = await import("@google/genai");
+                const ai = new GoogleGenAI({
+                  apiKey: key,
+                  httpOptions: { headers: { "User-Agent": "aistudio-build" } },
+                });
+
+                const prompt = "Identifique a placa da viatura nesta imagem. Retorne APENAS a placa (ex: ABC1D23) ou a palavra 'NONE' se não encontrar.";
+
+                let rawBase64 = base64Image;
+                let mimeType = "image/jpeg";
+                if (base64Image.includes(",")) {
+                  const parts = base64Image.split(",");
+                  rawBase64 = parts[1];
+                  const match = parts[0].match(/data:(.*?);base64/);
+                  if (match) {
+                    mimeType = match[1];
+                  }
+                }
+
+                const imagePart = {
+                  inlineData: {
+                    data: rawBase64,
+                    mimeType: mimeType,
+                  },
+                };
+
+                const response = await ai.models.generateContent({
+                  model: "gemini-3.5-flash",
+                  contents: [prompt, imagePart],
+                });
+
+                const plate = (response.text || "").trim().toUpperCase();
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ plate }));
+              } catch (err: any) {
+                console.error("Vite Extract Plate Error:", err);
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: err?.message || "Erro na extração de placa." }));
+              }
+            });
+          } catch (err: any) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: err?.message }));
           }
           return;
         }
