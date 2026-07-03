@@ -18,7 +18,21 @@ function geminiApiPlugin(env: Record<string, string>) {
     name: 'gemini-api-plugin',
     configureServer(server: any) {
       server.middlewares.use(async (req: any, res: any, next: any) => {
-        if (req.url === '/api/gemini/generate' && req.method === 'POST') {
+        // Handle CORS & OPTIONS preflight
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+
+        if (req.method === "OPTIONS") {
+          res.statusCode = 204;
+          res.end();
+          return;
+        }
+
+        const urlObj = new URL(req.url || '', 'http://localhost');
+        const pathname = urlObj.pathname.replace(/\/$/, ''); // Normaliza removendo barra final se houver
+
+        if (pathname === '/api/gemini/generate' && req.method === 'POST') {
           try {
             let body = '';
             req.on('data', (chunk: any) => {
@@ -139,7 +153,15 @@ Instruções:
             res.end(JSON.stringify({ error: err?.message || "Erro ao receber dados." }));
           }
           return;
-        } else if (req.url === '/api/gemini/parse-checklist' && req.method === 'POST') {
+        } else if (pathname === '/api/gemini/generate' && req.method === 'GET') {
+          res.statusCode = 405;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({
+            error: "Método Não Permitido (GET). Esta rota aceita apenas requisições POST com o prompt no corpo da mensagem.",
+            details: "Se você foi redirecionado para esta rota através de um GET, verifique se a sua requisição POST original foi interceptada ou redirecionada por políticas de cookies ou restrições de terceiros no navegador."
+          }));
+          return;
+        } else if (pathname === '/api/gemini/parse-checklist' && req.method === 'POST') {
           try {
             let body = '';
             req.on('data', (chunk: any) => { body += chunk; });
@@ -211,7 +233,15 @@ Instruções:
             res.end(JSON.stringify({ error: err?.message }));
           }
           return;
-        } else if (req.url === '/api/gemini/extract-plate' && req.method === 'POST') {
+        } else if (pathname === '/api/gemini/parse-checklist' && req.method === 'GET') {
+          res.statusCode = 405;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({
+            error: "Método Não Permitido (GET). Esta rota aceita apenas requisições POST com a descrição no corpo da mensagem.",
+            details: "Se você foi redirecionado para esta rota através de um GET, verifique se a sua requisição POST original foi interceptada ou redirecionada por políticas de cookies ou restrições de terceiros no navegador."
+          }));
+          return;
+        } else if (pathname === '/api/gemini/extract-plate' && req.method === 'POST') {
           try {
             let body = '';
             req.on('data', (chunk: any) => { body += chunk; });
@@ -280,6 +310,14 @@ Instruções:
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify({ error: err?.message }));
           }
+          return;
+        } else if (pathname === '/api/gemini/extract-plate' && req.method === 'GET') {
+          res.statusCode = 405;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({
+            error: "Método Não Permitido (GET). Esta rota aceita apenas requisições POST com a imagem em base64 no corpo da mensagem.",
+            details: "Se você foi redirecionado para esta rota através de um GET, verifique se a sua requisição POST original foi interceptada ou redirecionada por políticas de cookies ou restrições de terceiros no navegador."
+          }));
           return;
         }
         next();

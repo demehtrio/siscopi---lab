@@ -13,6 +13,18 @@ async function startServer() {
   // Body parser middleware
   app.use(express.json());
 
+  // CORS & OPTIONS preflight middleware
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+    
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(204);
+    }
+    next();
+  });
+
   // API endpoints
   app.post("/api/gemini/generate", async (req, res) => {
     try {
@@ -107,6 +119,13 @@ Instruções:
     }
   });
 
+  app.get("/api/gemini/generate", (req, res) => {
+    res.status(405).json({
+      error: "Método Não Permitido (GET). Esta rota aceita apenas requisições POST com o prompt no corpo da mensagem.",
+      details: "Se você foi redirecionado para esta rota através de um GET, verifique se a sua requisição POST original foi interceptada ou redirecionada por políticas de cookies ou restrições de terceiros no navegador."
+    });
+  });
+
   // Endpoint to parse checklist description
   app.post("/api/gemini/parse-checklist", async (req, res) => {
     try {
@@ -168,6 +187,13 @@ Instruções:
     }
   });
 
+  app.get("/api/gemini/parse-checklist", (req, res) => {
+    res.status(405).json({
+      error: "Método Não Permitido (GET). Esta rota aceita apenas requisições POST com a descrição no corpo da mensagem.",
+      details: "Se você foi redirecionado para esta rota através de um GET, verifique se a sua requisição POST original foi interceptada ou redirecionada por políticas de cookies ou restrições de terceiros no navegador."
+    });
+  });
+
   // Endpoint to extract license plate from base64 image
   app.post("/api/gemini/extract-plate", async (req, res) => {
     try {
@@ -223,6 +249,13 @@ Instruções:
       console.error("Extract Plate Error:", error);
       res.status(500).json({ error: error?.message || "Erro ao extrair placa." });
     }
+  });
+
+  app.get("/api/gemini/extract-plate", (req, res) => {
+    res.status(405).json({
+      error: "Método Não Permitido (GET). Esta rota aceita apenas requisições POST com a imagem em base64 no corpo da mensagem.",
+      details: "Se você foi redirecionado para esta rota através de um GET, verifique se a sua requisição POST original foi interceptada ou redirecionada por políticas de cookies ou restrições de terceiros no navegador."
+    });
   });
 
   // Serve static files / Vite middleware

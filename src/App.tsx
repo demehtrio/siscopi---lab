@@ -1019,41 +1019,51 @@ export default function App() {
     return () => unsubscribe();
   }, [user, isLocalMode]);
 
-  // One-time correction effect for VTR 640158 (SOJ6C78) to set mileage to 19144
+  // One-time correction effect for VTRs to set their specific mileages
   useEffect(() => {
     if (!user) return;
     
-    const targetVehicleId = 'SOJ6C78';
-    const targetMileage = 19144;
+    const corrections = [
+      { id: 'SOJ6C78', mileage: 19144, label: '640158' },
+      { id: 'SNR8A05', mileage: 32639, label: '640147' }
+    ];
 
     if (isLocalMode) {
       const localVehiclesStr = localStorage.getItem('siscopi_vehicles');
       if (localVehiclesStr) {
         try {
           const localVehicles = JSON.parse(localVehiclesStr) as Vehicle[];
-          const vehicleIndex = localVehicles.findIndex(v => v.id === targetVehicleId || v.plate === targetVehicleId);
-          if (vehicleIndex !== -1 && localVehicles[vehicleIndex].lastMileage !== targetMileage) {
-            localVehicles[vehicleIndex].lastMileage = targetMileage;
+          let updated = false;
+          corrections.forEach(({ id, mileage, label }) => {
+            const vehicleIndex = localVehicles.findIndex(v => v.id === id || v.plate === id);
+            if (vehicleIndex !== -1 && localVehicles[vehicleIndex].lastMileage !== mileage) {
+              localVehicles[vehicleIndex].lastMileage = mileage;
+              updated = true;
+              console.log(`[VTR Correction] Updated local VTR ${label} lastMileage to ${mileage}`);
+            }
+          });
+          if (updated) {
             localStorage.setItem('siscopi_vehicles', JSON.stringify(localVehicles));
             setVehicles(localVehicles);
-            console.log(`[VTR Correction] Updated local VTR 640158 lastMileage to ${targetMileage}`);
           }
         } catch (e) {
           console.error("Error updating local vehicle mileage:", e);
         }
       }
     } else {
-      const vehicle = vehicles.find(v => v.id === targetVehicleId || v.plate === targetVehicleId);
-      if (vehicle && vehicle.lastMileage !== targetMileage) {
-        const vehicleRef = doc(db, 'vehicles', targetVehicleId);
-        updateDoc(vehicleRef, { lastMileage: targetMileage })
-          .then(() => {
-            console.log(`[VTR Correction] Updated Firestore VTR 640158 lastMileage to ${targetMileage}`);
-          })
-          .catch((err) => {
-            console.error("Error updating Firestore vehicle mileage:", err);
-          });
-      }
+      corrections.forEach(({ id, mileage, label }) => {
+        const vehicle = vehicles.find(v => v.id === id || v.plate === id);
+        if (vehicle && vehicle.lastMileage !== mileage) {
+          const vehicleRef = doc(db, 'vehicles', id);
+          updateDoc(vehicleRef, { lastMileage: mileage })
+            .then(() => {
+              console.log(`[VTR Correction] Updated Firestore VTR ${label} lastMileage to ${mileage}`);
+            })
+            .catch((err) => {
+              console.error(`Error updating Firestore vehicle ${label} mileage:`, err);
+            });
+        }
+      });
     }
   }, [user, vehicles, isLocalMode]);
 
@@ -1455,7 +1465,7 @@ export default function App() {
             model: correctedModel,
             category: type === 'mo' ? 'moto' : 'car',
             status: 'available',
-            lastMileage: vehicleId === 'SOJ6C78' ? 19144 : 0,
+            lastMileage: vehicleId === 'SOJ6C78' ? 19144 : (vehicleId === 'SNR8A05' ? 32639 : 0),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           });
@@ -1614,7 +1624,7 @@ export default function App() {
           await setDoc(docRef, { 
             ...vehicleData, 
             status: 'available',
-            lastMileage: vehicleId === 'SOJ6C78' ? 19144 : 0,
+            lastMileage: vehicleId === 'SOJ6C78' ? 19144 : (vehicleId === 'SNR8A05' ? 32639 : 0),
             createdAt: serverTimestamp()
           });
         }
@@ -1821,6 +1831,27 @@ export default function App() {
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, 'vehicles');
       addNotification("Erro ao atualizar status da viatura.", "error");
+    }
+  };
+
+  const handleUpdateVehicleMileage = async (vehicleId: string, mileage: number) => {
+    if (!isAdmin) return;
+    try {
+      if (isLocalMode) {
+        const updated = vehicles.map(v => v.id === vehicleId ? { ...v, lastMileage: mileage } : v);
+        setVehicles(updated);
+        localStorage.setItem('siscopi_vehicles', JSON.stringify(updated));
+        addNotification("Quilometragem atualizada com sucesso!", "success");
+        return;
+      }
+      await updateDoc(doc(db, 'vehicles', vehicleId), {
+        lastMileage: mileage,
+        updatedAt: new Date().toISOString()
+      });
+      addNotification("Quilometragem atualizada com sucesso!", "success");
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, 'vehicles');
+      addNotification("Erro ao atualizar quilometragem.", "error");
     }
   };
 
@@ -6283,6 +6314,7 @@ export default function App() {
                   setExpandedHistoryId={setExpandedHistoryId}
                   onStartRecord={handleStartCadastroVtrRecord}
                   onToggleMaintenance={handleToggleMaintenance}
+                  onUpdateMileage={handleUpdateVehicleMileage}
                   maintenanceModal={maintenanceModal}
                   setMaintenanceModal={setMaintenanceModal}
                   onSaveRecord={handleSaveCadastroVtrRecord}
@@ -8148,7 +8180,8 @@ function CadastroVTR({
   isExtractingPlate,
   onExtractPlate,
   onGenerateDetailedPDF,
-  omeOrigemList
+  omeOrigemList,
+  onUpdateMileage
 }: {
   user: User | null;
   isAdmin: boolean;
@@ -8197,9 +8230,19 @@ function CadastroVTR({
   onExtractPlate: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onGenerateDetailedPDF: (record: RecordEntry) => void;
   omeOrigemList: string[];
+  onUpdateMileage?: (vehicleId: string, mileage: number) => void;
 }) {  
 
   
+  const [isEditingFormLastMileage, setIsEditingFormLastMileage] = React.useState(false);
+  const [formLastMileage, setFormLastMileage] = React.useState(selectedVehicle?.lastMileage || 0);
+
+  React.useEffect(() => {
+    if (selectedVehicle) {
+      setFormLastMileage(selectedVehicle.lastMileage || 0);
+    }
+  }, [selectedVehicle]);
+
   const counts = React.useMemo(() => {
     const cars = vehicles.filter((v: Vehicle) => (v.category === 'car' || !v.category));
     const motos = vehicles.filter((v: Vehicle) => v.category === 'moto');
@@ -8463,14 +8506,69 @@ function CadastroVTR({
 
                     {currentTab === 2 && (
                       <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                        <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex items-center gap-4">
-                          <div className="bg-blue-600 p-3 rounded-2xl text-white">
-                            <RefreshCw size={24} />
+                        <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="bg-blue-600 p-3 rounded-2xl text-white flex-none">
+                              <RefreshCw size={24} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-blue-700 uppercase tracking-wider">KM Anterior</p>
+                              {isEditingFormLastMileage ? (
+                                <div className="flex items-center gap-2 mt-1">
+                                  <input
+                                    type="number"
+                                    value={formLastMileage}
+                                    onChange={(e) => setFormLastMileage(Number(e.target.value))}
+                                    className="w-32 px-2 py-1 text-base font-bold border border-blue-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800"
+                                    autoFocus
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (selectedVehicle && onUpdateMileage) {
+                                        onUpdateMileage(selectedVehicle.id, formLastMileage);
+                                        // Update selectedVehicle locally as well
+                                        selectedVehicle.lastMileage = formLastMileage;
+                                      }
+                                      setIsEditingFormLastMileage(false);
+                                    }}
+                                    className="p-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all"
+                                    title="Salvar"
+                                  >
+                                    <Check size={16} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setIsEditingFormLastMileage(false);
+                                      setFormLastMileage(selectedVehicle?.lastMileage || 0);
+                                    }}
+                                    className="p-1.5 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-all"
+                                    title="Cancelar"
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <p className="text-2xl font-black text-blue-900">
+                                  {selectedVehicle?.lastMileage} <span className="text-sm font-bold opacity-60">km</span>
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-black text-blue-700 uppercase tracking-wider">KM Anterior</p>
-                            <p className="text-2xl font-black text-blue-900">{selectedVehicle?.lastMileage} <span className="text-sm font-bold opacity-60">km</span></p>
-                          </div>
+                          {isAdmin && !isEditingFormLastMileage && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormLastMileage(selectedVehicle?.lastMileage || 0);
+                                setIsEditingFormLastMileage(true);
+                              }}
+                              className="p-2 bg-white hover:bg-blue-100/50 text-blue-600 border border-blue-100 rounded-2xl font-bold text-xs transition-all flex items-center gap-1.5 self-start sm:self-auto"
+                            >
+                              <Pencil size={14} />
+                              Editar KM Anterior
+                            </button>
+                          )}
                         </div>
 
                         <div className="space-y-2">
@@ -8617,6 +8715,7 @@ function CadastroVTR({
                   onStartRecord={onStartRecord}
                   onToggleMaintenance={onToggleMaintenance}
                   submitting={submitting}
+                  onUpdateMileage={onUpdateMileage}
                 />
               ))}
               {displayedVehicles.length === 0 && (
@@ -8937,14 +9036,22 @@ function VehicleCard({
   currentUserEmail, 
   onStartRecord, 
   onToggleMaintenance,
-  submitting
+  submitting,
+  onUpdateMileage
 }: any) {
   const isAvailable = vehicle.status === 'available';
   const isInUse = vehicle.status === 'in_use';
   const isMaintenance = vehicle.status === 'maintenance';
   
-    // Somente o usuário que retirou ou o administrador pode fazer o retorno
-    const canCheckOut = isAdmin || (isInUse ? currentUserEmail === vehicle.currentDriverEmail : !!currentUserEmail);
+  const [isEditingMileage, setIsEditingMileage] = useState(false);
+  const [tempMileage, setTempMileage] = useState(vehicle.lastMileage || 0);
+
+  useEffect(() => {
+    setTempMileage(vehicle.lastMileage || 0);
+  }, [vehicle.lastMileage]);
+
+  // Somente o usuário que retirou ou o administrador pode fazer o retorno
+  const canCheckOut = isAdmin || (isInUse ? currentUserEmail === vehicle.currentDriverEmail : !!currentUserEmail);
 
   return (
     <motion.div 
@@ -8986,7 +9093,56 @@ function VehicleCard({
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-slate-50 p-3 rounded-2xl">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Última KM</p>
-          <p className="text-sm font-bold text-slate-700">{vehicle.lastMileage} km</p>
+          {isEditingMileage ? (
+            <div className="flex items-center gap-1 mt-1">
+              <input
+                type="number"
+                value={tempMileage}
+                onChange={(e) => setTempMileage(Number(e.target.value))}
+                className="w-full px-1 py-0.5 text-xs font-bold border border-blue-300 rounded outline-none focus:ring-1 focus:ring-blue-500 bg-white text-slate-800"
+                autoFocus
+              />
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdateMileage && onUpdateMileage(vehicle.id, tempMileage);
+                  setIsEditingMileage(false);
+                }}
+                className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-all"
+                title="Salvar"
+              >
+                <Check size={14} />
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditingMileage(false);
+                  setTempMileage(vehicle.lastMileage || 0);
+                }}
+                className="p-1 text-rose-600 hover:bg-rose-50 rounded transition-all"
+                title="Cancelar"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-sm font-bold text-slate-700">{vehicle.lastMileage} km</p>
+              {isAdmin && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTempMileage(vehicle.lastMileage || 0);
+                    setIsEditingMileage(true);
+                  }}
+                  className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all"
+                  title="Editar KM"
+                >
+                  <Pencil size={12} />
+                </button>
+              )}
+            </div>
+          )}
         </div>
         <div className="bg-slate-50 p-3 rounded-2xl">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Motorista</p>
