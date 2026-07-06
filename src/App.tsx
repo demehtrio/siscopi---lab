@@ -1957,7 +1957,7 @@ export default function App() {
   const formatWhatsAppMessage = (record: RecordEntry) => {
     const isCadVtr = record.source === 'cadchecking' || record.source === 'cadastro_vtr' || record.source === 'checklist_module';
     const isExit = record.type === 'check-out' || record.type === 'maintenance-out';
-    const typeLabel = isExit ? 'SAÍDA' : 'RETORNO';
+    const typeLabel = isExit ? 'PARTIDA' : 'REGRESSO';
     
     // Plate formatting
     const plateFormatted = record.identification?.plate?.replace(/[\s-]/g, '').toUpperCase() || '---';
@@ -2143,7 +2143,7 @@ export default function App() {
         
         identificationData.push(['Data', format(timestamp, 'dd/MM/yyyy')]);
         identificationData.push(['Hora', ident.time || '---']);
-        identificationData.push(['Tipo de Registro', isOut ? 'SAÍDA' : 'RETORNO']);
+        identificationData.push(['Tipo de Registro', isOut ? 'PARTIDA' : 'REGRESSO']);
 
         addSection('Identificação', identificationData);
 
@@ -2655,8 +2655,8 @@ export default function App() {
         return matchesType && matchesDate;
       }).map((record: any) => {
         const date = record.timestamp?.toDate ? record.timestamp.toDate() : new Date(record.timestamp);
-        const typeLabel = record.type === 'check-out' ? 'SAÍDA' : 
-                         record.type === 'check-in' ? 'RETORNO' : 
+        const typeLabel = record.type === 'check-out' ? 'PARTIDA' : 
+                         record.type === 'check-in' ? 'REGRESSO' : 
                          record.type.includes('maintenance') ? 'MANUTENÇÃO' : record.type;
         
         return [
@@ -3777,7 +3777,7 @@ export default function App() {
 
           doc.setTextColor(isCheckIn ? APP_BLUE_DARK[0] : APP_EMERALD[0], isCheckIn ? APP_BLUE_DARK[1] : APP_EMERALD[1], isCheckIn ? APP_BLUE_DARK[2] : APP_EMERALD[2]);
           doc.setFontSize(9);
-          doc.text(`${isCheckIn ? 'RETORNO' : 'SAÍDA'} - PAT: ${v.identification?.prefix || '---'} | PLACA: ${v.identification?.plate || '---'}`, 18, yPos + 7);
+          doc.text(`${isCheckIn ? 'REGRESSO' : 'PARTIDA'} - PAT: ${v.identification?.prefix || '---'} | PLACA: ${v.identification?.plate || '---'}`, 18, yPos + 7);
           doc.setTextColor(30, 41, 59);
           doc.setFontSize(8);
           doc.text(`Vtr: ${v.identification?.model || '---'} | Emprego: ${v.drivers?.serviceType || '---'}`, 18, yPos + 13);
@@ -7103,7 +7103,7 @@ function HistoryItem({ item, onDownload, onDelete, onEdit, isAdmin, isLast, user
                   <>
                     <div>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tipo</p>
-                      <p className="text-sm font-bold text-slate-700">{(item.type === 'check-out' || item.type === 'maintenance-out') ? 'SAÍDA' : 'RETORNO'}</p>
+                      <p className="text-sm font-bold text-slate-700">{(item.type === 'check-out' || item.type === 'maintenance-out') ? 'PARTIDA' : 'REGRESSO'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Km</p>
@@ -7279,7 +7279,7 @@ function ChecklistHistoryItem({
                         ? 'bg-orange-50 text-orange-700 border-orange-100' 
                         : 'bg-emerald-50 text-emerald-700 border-emerald-100')
                 }`}>
-                  {record.source === 'standalone_checklist' ? 'CHECAGEM' : (record.type === 'check-out' || record.type === 'maintenance-out' ? 'SAÍDA' : 'RETORNO')}
+                  {record.source === 'standalone_checklist' ? 'CHECAGEM' : (record.type === 'check-out' || record.type === 'maintenance-out' ? 'PARTIDA' : 'REGRESSO')}
                 </span>
               </div>
             </div>
@@ -8834,7 +8834,7 @@ function CadastroVTR({
                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                  <div>
                     <h3 className="text-2xl sm:text-3xl font-black tracking-tight mb-2">Histórico de Movimentações</h3>
-                    <p className="text-slate-400 font-medium max-w-md text-sm sm:text-base">Consulte o log completo de saídas, retornos e manutenções da frota.</p>
+                    <p className="text-slate-400 font-medium max-w-md text-sm sm:text-base">Consulte o log completo de partidas, regressos e manutenções da frota.</p>
                  </div>
                  <button 
                   onClick={onGeneratePDF}
@@ -8855,8 +8855,8 @@ function CadastroVTR({
                   <div className="flex flex-wrap gap-2">
                     {[
                       { id: 'all', label: 'Todos' },
-                      { id: 'check-in', label: 'Retornos' },
-                      { id: 'check-out', label: 'Saídas' },
+                      { id: 'check-in', label: 'Regressos' },
+                      { id: 'check-out', label: 'Partidas' },
                       { id: 'maintenance', label: 'Manutenção' }
                     ].map((f) => (
                       <button
@@ -9330,7 +9330,7 @@ function CadastroVtrHistoryItem({
               <span className="text-xs font-black text-blue-600 font-mono">{record.identification.plate}</span>
             </div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-              {isCheckIn ? 'Retorno (Check-in)' : isMaintenance ? 'Manutenção' : 'Saída (Check-out)'} • {formattedDate} às {formattedTime}
+              {isCheckIn ? 'Regresso (Check-in)' : isMaintenance ? 'Manutenção' : 'Partida (Check-out)'} • {formattedDate} às {formattedTime}
             </p>
           </div>
         </div>
