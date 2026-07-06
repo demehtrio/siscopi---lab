@@ -8250,7 +8250,7 @@ function CadastroVTR({
   const formSteps = React.useMemo(() => {
     if (operationType === 'check-out') {
       return [
-        { icon: <Siren size={18} />, label: 'Identificação & Condutor' },
+        { icon: <Siren size={18} />, label: 'Viatura & Condutor' },
         { icon: <RefreshCw size={18} />, label: 'Quilometragem' }
       ];
     } else {
