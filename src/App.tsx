@@ -8404,7 +8404,7 @@ function CadastroVTR({
                 <div className="relative z-10 flex items-center justify-between">
                   <div>
                     <span className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest mb-2 inline-block">
-                      {operationType === 'check-out' ? 'SAÍDA (Cautelar Viatura)' : 'RETORNO (Devolução Viatura)'}
+                      {operationType === 'check-out' ? 'PARTIDA (Cautelar Viatura)' : 'REGRESSO (Devolução Viatura)'}
                     </span>
                     <h3 className="text-2xl sm:text-3xl font-black tracking-tight">{selectedVehicle?.prefix}</h3>
                     <p className="opacity-90 font-bold text-sm sm:text-lg">{selectedVehicle?.model} • <span className="font-mono">{selectedVehicle?.plate}</span></p>
@@ -9233,7 +9233,7 @@ function VehicleCard({
             className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 active:scale-95 disabled:opacity-50"
           >
             {submitting ? <Loader2 className="animate-spin" size={18} /> : <LogOut size={18} />}
-            Saída
+            Partida
           </button>
         )}
         {isInUse && (
@@ -9248,7 +9248,7 @@ function VehicleCard({
               } disabled:opacity-50`}
             >
               {submitting ? <Loader2 className="animate-spin" size={18} /> : <LogIn size={18} />}
-              Retorno
+              Regresso
             </button>
             {!canCheckOut && (
               <p className="text-[9px] text-red-500 font-bold text-center">
