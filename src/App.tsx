@@ -2304,6 +2304,13 @@ export default function App() {
   const handleSaveCadastroVtrRecord = async (skipWhatsApp = false) => {
     if (!selectedVehicle || !operationType || !user) return;
     
+    if (operationType === 'check-out') {
+      if (!cadastroVtrFormData.drivers.driverName || cadastroVtrFormData.drivers.driverName.trim() === '') {
+        addNotification("O preenchimento do campo Condutor é obrigatório para a saída da viatura.", "error");
+        return;
+      }
+    }
+    
     const currentMileage = Number(cadastroVtrFormData.mileage.currentMileage);
     const lastMileage = Number(selectedVehicle.lastMileage || 0);
 
@@ -6339,6 +6346,7 @@ export default function App() {
                   omeOrigemList={omeOrigemList}
                   isExtractingPlate={isExtractingPlate}
                   onExtractPlate={handleExtractPlate}
+                  addNotification={addNotification}
                 />
               </motion.div>
             )}
@@ -8181,7 +8189,8 @@ function CadastroVTR({
   onExtractPlate,
   onGenerateDetailedPDF,
   omeOrigemList,
-  onUpdateMileage
+  onUpdateMileage,
+  addNotification
 }: {
   user: User | null;
   isAdmin: boolean;
@@ -8231,11 +8240,33 @@ function CadastroVTR({
   onGenerateDetailedPDF: (record: RecordEntry) => void;
   omeOrigemList: string[];
   onUpdateMileage?: (vehicleId: string, mileage: number) => void;
+  addNotification?: (message: string, type: 'success' | 'error' | 'info') => void;
 }) {  
 
   
   const [isEditingFormLastMileage, setIsEditingFormLastMileage] = React.useState(false);
   const [formLastMileage, setFormLastMileage] = React.useState(selectedVehicle?.lastMileage || 0);
+
+  const formSteps = React.useMemo(() => {
+    if (operationType === 'check-out') {
+      return [
+        { icon: <Siren size={18} />, label: 'Identificação & Condutor' },
+        { icon: <RefreshCw size={18} />, label: 'Quilometragem' }
+      ];
+    } else {
+      return [
+        { icon: <Siren size={18} />, label: 'Identificação' },
+        { icon: <UserRound size={18} />, label: 'Condutor' },
+        { icon: <RefreshCw size={18} />, label: 'Quilometragem' }
+      ];
+    }
+  }, [operationType]);
+
+  React.useEffect(() => {
+    if (operationType === 'check-out' && currentTab > 1) {
+      setCurrentTab(0);
+    }
+  }, [operationType, currentTab, setCurrentTab]);
 
   React.useEffect(() => {
     if (selectedVehicle) {
@@ -8384,11 +8415,7 @@ function CadastroVTR({
                   {/* Form Body - Multi-step Form */}
                   <div className="p-8 sm:p-12 pb-32 sm:pb-32 flex-1 min-h-[400px]">
                   <div className="flex gap-2 mb-8 bg-slate-50 p-1.5 rounded-2xl overflow-x-auto custom-scrollbar">
-                    {[
-                      { icon: <Siren size={18} />, label: 'Identificação' },
-                      { icon: <UserRound size={18} />, label: 'Condutor' },
-                      { icon: <RefreshCw size={18} />, label: 'Quilometragem' }
-                    ].map((step, idx) => (
+                    {formSteps.map((step, idx) => (
                       <button
                         key={idx}
                         onClick={() => setCurrentTab(idx)}
@@ -8404,6 +8431,13 @@ function CadastroVTR({
                     <div className="min-h-[400px]">
                       {currentTab === 0 && (
                       <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+                        {operationType === 'check-out' && (
+                          <div className="border-b border-slate-100 pb-2 mb-4">
+                            <h4 className="text-xs font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                              <Siren size={14} /> 1. Identificação da Viatura
+                            </h4>
+                          </div>
+                        )}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div className="space-y-2">
                             <ChecklistSearchableSelect 
@@ -8476,10 +8510,40 @@ function CadastroVTR({
                             />
                           </div>
                         </div>
+
+                        {operationType === 'check-out' && (
+                          <div className="space-y-6 mt-8">
+                            <div className="border-b border-slate-100 pb-2 pt-4">
+                              <h4 className="text-xs font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                                <UserRound size={14} /> 2. Condutor Responsável
+                              </h4>
+                            </div>
+                            <div className="space-y-2">
+                              <ChecklistSearchableSelect 
+                                label="Motorista Responsável / Matrícula *"
+                                value={formData.drivers.driverName}
+                                onChange={(val: string) => setFormData({...formData, drivers: {...formData.drivers, driverName: val}})}
+                                options={personnelList}
+                                placeholder="Selecione o Motorista..."
+                                variant="blue"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <ChecklistSearchableSelect 
+                                label="OME de Origem do Efetivo"
+                                value={formData.drivers.serviceType}
+                                onChange={(val: string) => setFormData({...formData, drivers: {...formData.drivers, serviceType: val}})}
+                                options={omeOrigemList}
+                                placeholder="Selecione a OME..."
+                                variant="blue"
+                              />
+                            </div>
+                          </div>
+                        )}
                       </motion.div>
                     )}
 
-                    {currentTab === 1 && (
+                    {currentTab === 1 && operationType === 'check-in' && (
                       <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                         <div className="space-y-2">
                           <ChecklistSearchableSelect 
@@ -8504,7 +8568,7 @@ function CadastroVTR({
                       </motion.div>
                     )}
 
-                    {currentTab === 2 && (
+                    {((currentTab === 1 && operationType === 'check-out') || (currentTab === 2 && operationType === 'check-in')) && (
                       <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                         <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div className="flex items-center gap-4">
@@ -8614,9 +8678,19 @@ function CadastroVTR({
                     </button>
                   )}
                   
-                  {currentTab < 2 ? (
+                  {currentTab < formSteps.length - 1 ? (
                     <button 
-                      onClick={() => setCurrentTab(currentTab + 1)}
+                      onClick={() => {
+                        if (operationType === 'check-out' && currentTab === 0) {
+                          if (!formData.drivers.driverName || formData.drivers.driverName.trim() === '') {
+                            if (addNotification) {
+                              addNotification("O preenchimento do campo Condutor é obrigatório para a saída da viatura.", "error");
+                            }
+                            return;
+                          }
+                        }
+                        setCurrentTab(currentTab + 1);
+                      }}
                       className="w-full sm:flex-[2] py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl active:scale-95"
                     >
                       Próximo Passo
@@ -8625,7 +8699,7 @@ function CadastroVTR({
                     <div className="flex flex-col sm:flex-row gap-3 w-full sm:flex-[2]">
                     <button 
                       onClick={() => onSaveRecord(true)}
-                        disabled={submitting || formData.mileage.currentMileage === ''}
+                        disabled={submitting || formData.mileage.currentMileage === '' || (operationType === 'check-out' && !formData.drivers.driverName)}
                         className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         {submitting ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
@@ -8633,7 +8707,7 @@ function CadastroVTR({
                       </button>
                       <button 
                         onClick={() => onSaveRecord()}
-                        disabled={submitting || formData.mileage.currentMileage === ''}
+                        disabled={submitting || formData.mileage.currentMileage === '' || (operationType === 'check-out' && !formData.drivers.driverName)}
                         className={`flex-[1.5] py-4 text-white rounded-2xl font-bold transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 ${operationType === 'check-in' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                       >
                         {submitting ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
