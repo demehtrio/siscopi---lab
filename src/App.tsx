@@ -97,7 +97,9 @@ import {
   Sun,
   Moon,
   Mail,
-  Phone
+  Phone,
+  Heart,
+  LifeBuoy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { jsPDF } from 'jspdf';
@@ -183,8 +185,8 @@ const removeWhiteBackground = (base64: string): Promise<string> => {
   });
 };
 
-// --- Agosto Lilás Awareness Components ---
-const LilacRibbon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
+// --- Setembro Amarelo Awareness Components ---
+const YellowRibbon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
   <svg 
     width={size} 
     height={size} 
@@ -194,54 +196,55 @@ const LilacRibbon = ({ size = 24, className = "" }: { size?: number; className?:
     className={className}
   >
     <defs>
-      <linearGradient id="lilasRibbonGradGlobal" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#F472B6" />
-        <stop offset="35%" stopColor="#C084FC" />
-        <stop offset="70%" stopColor="#A855F7" />
-        <stop offset="100%" stopColor="#7E22CE" />
+      <linearGradient id="amareloRibbonGradGlobal" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FEF08A" />
+        <stop offset="25%" stopColor="#FDE047" />
+        <stop offset="60%" stopColor="#EAB308" />
+        <stop offset="85%" stopColor="#CA8A04" />
+        <stop offset="100%" stopColor="#A16207" />
       </linearGradient>
     </defs>
     <path 
       d="M12 2C9.23858 2 7 4.23858 7 7C7 9.8 8.8 12.2 10.6 14.5L5.2 21.3C4.8 21.8 5.1 22.5 5.8 22.5H8.2L12 17.5L15.8 22.5H18.2C18.9 22.5 19.2 21.8 18.8 21.3L13.4 14.5C15.2 12.2 17 9.8 17 7C17 4.23858 14.7614 2 12 2ZM12 4.5C13.3807 4.5 14.5 5.61929 14.5 7C14.5 8.38071 13.3807 9.5 12 9.5C10.6193 9.5 9.5 8.38071 9.5 7C9.5 5.61929 10.6193 4.5 12 4.5Z" 
-      fill="url(#lilasRibbonGradGlobal)"
+      fill="url(#amareloRibbonGradGlobal)"
     />
   </svg>
 );
 
-const AgostoLilasTopBar = ({ onOpenInfo }: { onOpenInfo: () => void }) => {
+const SetembroAmareloTopBar = ({ onOpenInfo }: { onOpenInfo: () => void }) => {
   return (
-    <div className="bg-gradient-to-r from-purple-950 via-purple-900 to-fuchsia-950 text-white shadow-md border-b border-purple-500/40 px-3 py-2 flex items-center justify-between sticky top-0 z-[160] transition-all">
+    <div className="bg-gradient-to-r from-amber-950 via-yellow-950 to-amber-950 text-white shadow-md border-b border-yellow-500/40 px-3 py-2 flex items-center justify-between sticky top-0 z-[160] transition-all">
       <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="bg-purple-800/90 p-1 rounded-full border border-purple-400/50 shadow-inner flex items-center justify-center shrink-0">
-            <LilacRibbon size={18} />
+          <div className="bg-amber-900/90 p-1 rounded-full border border-yellow-400/60 shadow-inner flex items-center justify-center shrink-0">
+            <YellowRibbon size={18} />
           </div>
           <div className="flex items-center gap-2 flex-wrap min-w-0">
-            <span className="font-black text-purple-100 uppercase tracking-wider text-[10px] sm:text-xs bg-purple-800/80 px-2 py-0.5 rounded-full border border-purple-400/40 shrink-0">
-              AGOSTO LILÁS
+            <span className="font-black text-amber-950 uppercase tracking-wider text-[10px] sm:text-xs bg-yellow-400 px-2.5 py-0.5 rounded-full border border-yellow-300 shadow-sm shrink-0">
+              SETEMBRO AMARELO
             </span>
-            <span className="font-bold text-white text-xs sm:text-sm truncate">
-              Campanha Nacional pelo Fim da Violência contra a Mulher
+            <span className="font-bold text-yellow-100 text-xs sm:text-sm truncate">
+              Prevenção ao Suicídio e Valorização da Vida
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <a
-            href="tel:180"
-            className="flex items-center gap-1.5 px-3 py-1 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-full font-black text-xs transition-all shadow-sm active:scale-95 border border-fuchsia-300/40"
-            title="Ligue 180 - Central de Atendimento à Mulher"
+            href="tel:188"
+            className="flex items-center gap-1.5 px-3 py-1 bg-yellow-400 hover:bg-yellow-300 text-slate-950 rounded-full font-black text-xs transition-all shadow-sm active:scale-95 border border-yellow-200"
+            title="Ligue 188 - Centro de Valorização da Vida (CVV) - Gratuito 24h"
           >
-            <Phone size={12} className="animate-bounce" />
-            <span className="hidden sm:inline">Disque 180</span>
-            <span className="sm:hidden">180</span>
+            <Phone size={12} className="animate-bounce text-slate-950" />
+            <span className="hidden sm:inline">Disque 188 (CVV)</span>
+            <span className="sm:hidden">188 CVV</span>
           </a>
           <button
             onClick={onOpenInfo}
-            className="flex items-center gap-1 px-2.5 py-1 bg-white/10 hover:bg-white/20 text-purple-200 rounded-full font-bold text-xs transition-all border border-purple-300/30"
+            className="flex items-center gap-1 px-2.5 py-1 bg-white/10 hover:bg-white/20 text-yellow-200 rounded-full font-bold text-xs transition-all border border-yellow-400/30"
           >
             <Info size={12} />
-            <span className="hidden md:inline">Orientações PMPE</span>
+            <span className="hidden md:inline">Apoio & Info</span>
             <span className="md:hidden">Info</span>
           </button>
         </div>
@@ -250,15 +253,15 @@ const AgostoLilasTopBar = ({ onOpenInfo }: { onOpenInfo: () => void }) => {
   );
 };
 
-const AgostoLilasModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+const SetembroAmareloModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-purple-200 dark:border-purple-900/60 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar relative overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-yellow-300 dark:border-yellow-700/60 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar relative overflow-hidden flex flex-col">
         {/* Modal Header */}
-        <div className="p-6 sm:p-8 bg-gradient-to-r from-purple-950 via-purple-900 to-fuchsia-950 text-white relative">
-          <div className="absolute top-0 right-0 p-12 bg-fuchsia-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="p-6 sm:p-8 bg-gradient-to-r from-amber-950 via-yellow-950 to-amber-900 text-white relative">
+          <div className="absolute top-0 right-0 p-12 bg-yellow-500/10 rounded-full blur-2xl pointer-events-none"></div>
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
@@ -268,95 +271,134 @@ const AgostoLilasModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
           
           <div className="flex items-center gap-4 mb-3">
             <div className="w-14 h-14 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl flex items-center justify-center shrink-0">
-              <LilacRibbon size={36} />
+              <YellowRibbon size={36} />
             </div>
             <div>
-              <span className="text-[10px] font-black bg-fuchsia-500/30 border border-fuchsia-300/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider text-fuchsia-200">
-                CAMPANHA NACIONAL DE CONSCIENTIZAÇÃO
+              <span className="text-[10px] font-black bg-yellow-400 text-slate-950 border border-yellow-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                CAMPANHA BRASILEIRA DE CONSCIENTIZAÇÃO
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">
-                Agosto Lilás • PMPE
+                Setembro Amarelo • PMPE
               </h2>
             </div>
           </div>
-          <p className="text-purple-200 text-xs sm:text-sm font-medium leading-relaxed">
-            Conscientização e enfrentamento à violência doméstica e familiar contra a mulher. 18 Anos da Lei Maria da Penha (Lei nº 11.340/2006).
+          <p className="text-yellow-100 text-xs sm:text-sm font-medium leading-relaxed">
+            Mês de prevenção ao suicídio e valorização da vida. Cuidar da saúde mental é um compromisso com você, com sua família e com a sociedade.
           </p>
         </div>
 
         {/* Modal Content */}
         <div className="p-6 sm:p-8 space-y-6 text-slate-700 dark:text-slate-300">
           {/* Main message */}
-          <div className="p-4 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 rounded-2xl flex items-start gap-3">
-            <Info size={20} className="text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
-            <p className="text-xs sm:text-sm font-medium text-purple-950 dark:text-purple-200 leading-relaxed">
-              A Polícia Militar de Pernambuco reforça o compromisso na proteção, acolhimento e garantia dos direitos de todas as mulheres. A violência doméstica engloba violência física, psicológica, moral, patrimonial e sexual.
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-yellow-300 dark:border-yellow-700/60 rounded-2xl flex items-start gap-3">
+            <Heart size={22} className="text-amber-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+            <p className="text-xs sm:text-sm font-medium text-amber-950 dark:text-yellow-100 leading-relaxed">
+              A Polícia Militar de Pernambuco valoriza a vida de cada militar e cidadão. Sofrimento psicológico, sobrecarga e ansiedade têm tratamento. Pedir ajuda não é fraqueza — é um ato de coragem e autocuidado. Falar é sempre a melhor escolha.
             </p>
           </div>
 
-          {/* Key Emergency Channels */}
+          {/* Key Support Channels */}
           <div className="space-y-3">
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
-              <Phone size={16} className="text-fuchsia-600" />
-              <span>Canais de Atendimento e Denúncia</span>
+              <Phone size={16} className="text-yellow-600 dark:text-yellow-400" />
+              <span>Canais Gratuitos de Apoio e Atendimento</span>
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-4 bg-fuchsia-50 dark:bg-fuchsia-950/30 border border-fuchsia-200 dark:border-fuchsia-800/40 rounded-2xl flex flex-col justify-between">
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-300 dark:border-yellow-700/50 rounded-2xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-black text-fuchsia-900 dark:text-fuchsia-200 text-base">Disque 180</span>
-                    <span className="text-[9px] font-black bg-fuchsia-200 dark:bg-fuchsia-800 text-fuchsia-900 dark:text-fuchsia-100 px-2 py-0.5 rounded-full uppercase">24h • Gratuito</span>
+                    <span className="font-black text-amber-950 dark:text-yellow-300 text-base">Disque 188 (CVV)</span>
+                    <span className="text-[9px] font-black bg-yellow-400 text-slate-950 px-2 py-0.5 rounded-full uppercase">24h • Gratuito</span>
                   </div>
-                  <p className="text-xs text-fuchsia-800 dark:text-fuchsia-300 font-medium">
-                    Central de Atendimento à Mulher. Recebe denúncias, orienta e encaminha para a rede de proteção.
+                  <p className="text-xs text-amber-900 dark:text-yellow-100/90 font-medium">
+                    Centro de Valorização da Vida. Atendimento anônimo e sigiloso por telefone, chat ou e-mail.
                   </p>
                 </div>
-                <a
-                  href="tel:180"
-                  className="mt-3 w-full py-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
-                >
-                  <Phone size={14} />
-                  <span>Ligar 180</span>
-                </a>
+                <div className="mt-3 flex gap-2">
+                  <a
+                    href="tel:188"
+                    className="flex-1 py-2 bg-yellow-400 hover:bg-yellow-500 text-slate-950 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                  >
+                    <Phone size={14} />
+                    <span>Ligar 188</span>
+                  </a>
+                  <a
+                    href="https://www.cvv.org.br"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center transition-colors border border-slate-200 dark:border-slate-700"
+                    title="Acessar site do CVV"
+                  >
+                    Site
+                  </a>
+                </div>
               </div>
 
-              <div className="p-4 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/40 rounded-2xl flex flex-col justify-between">
+              <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700/50 rounded-2xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-black text-purple-900 dark:text-purple-200 text-base">190 PMPE</span>
-                    <span className="text-[9px] font-black bg-purple-200 dark:bg-purple-800 text-purple-900 dark:text-purple-100 px-2 py-0.5 rounded-full uppercase">Emergência</span>
+                    <span className="font-black text-amber-950 dark:text-amber-200 text-base">SAMU 192 / 190</span>
+                    <span className="text-[9px] font-black bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-200 px-2 py-0.5 rounded-full uppercase">Emergência</span>
                   </div>
-                  <p className="text-xs text-purple-800 dark:text-purple-300 font-medium">
-                    Polícia Militar de Pernambuco. Para atendimento imediato de ocorrências em andamento ou risco iminente.
+                  <p className="text-xs text-amber-900 dark:text-amber-100/90 font-medium">
+                    Para situações de emergência médica, crises agudas de saúde mental ou risco imediato à vida.
                   </p>
                 </div>
-                <a
-                  href="tel:190"
-                  className="mt-3 w-full py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
-                >
-                  <Phone size={14} />
-                  <span>Ligar 190</span>
-                </a>
+                <div className="mt-3 flex gap-2">
+                  <a
+                    href="tel:192"
+                    className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                  >
+                    <Phone size={14} />
+                    <span>SAMU 192</span>
+                  </a>
+                  <a
+                    href="tel:190"
+                    className="flex-1 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                  >
+                    <Phone size={14} />
+                    <span>190 PMPE</span>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* PMPE Operational Directives */}
+          {/* PMPE Psychological Support */}
           <div className="space-y-3">
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
-              <ShieldCheck size={16} className="text-purple-600" />
-              <span>Patrulha Maria da Penha PMPE</span>
+              <LifeBuoy size={16} className="text-yellow-600 dark:text-yellow-400" />
+              <span>Apoio Psicológico e Social PMPE (DAS / CAS)</span>
             </h3>
-            <p className="text-xs font-medium leading-relaxed">
-              Atua de forma especializada no acompanhamento das mulheres com Medidas Protetivas de Urgência concedidas pelo Poder Judiciário, realizando visitas periódicas para garantir o cumprimento das decisões e afastar os agressores.
-            </p>
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-medium space-y-2 leading-relaxed">
+              <p>
+                A Diretoria de Assistência Social (DAS) e a rede de saúde da PMPE oferecem acolhimento psicológico, psiquiátrico e serviço social a policiais militares da ativa, veteranos e seus dependentes.
+              </p>
+              <p className="text-slate-500 dark:text-slate-400">
+                Se notar que um companheiro de farda ou familiar está passando por um momento difícil, ofereça uma escuta atenta e oriente o contato com o serviço de saúde da corporação.
+              </p>
+            </div>
+          </div>
+
+          {/* Practical Tips */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
+              <ShieldCheck size={16} className="text-amber-600 dark:text-yellow-400" />
+              <span>Como Apoiar Quem Precisa</span>
+            </h3>
+            <ul className="text-xs font-medium space-y-1.5 list-disc list-inside text-slate-600 dark:text-slate-300">
+              <li><strong>Escute com empatia:</strong> Não julgue, não compare dores e não minimize o sofrimento.</li>
+              <li><strong>Incentive a ajuda profissional:</strong> Sugira procurar psicólogo, psiquiatra ou os serviços de saúde.</li>
+              <li><strong>Não deixe sozinho:</strong> Em momentos de crise severa, acompanhe a pessoa até o atendimento médico ou acione o 188 / 192.</li>
+            </ul>
           </div>
 
           {/* Closing call */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-400">
-              Agosto Lilás • Proteção e Respeito à Mulher
+            <span className="text-[11px] font-bold text-amber-700 dark:text-yellow-400 flex items-center gap-1.5">
+              <YellowRibbon size={16} />
+              Setembro Amarelo • Sua vida tem valor!
             </span>
             <button
               onClick={onClose}
@@ -1104,7 +1146,7 @@ export default function App() {
   const [maintenanceModal, setMaintenanceModal] = useState<{ vehicle: Vehicle, notes: string } | null>(null);
   const [currentCadastroVtrTab, setCurrentCadastroVtrTab] = useState<number>(0);
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
-  const [showAgostoLilasModal, setShowAgostoLilasModal] = useState(false);
+  const [showSetembroAmareloModal, setShowSetembroAmareloModal] = useState(false);
   const [clearingHistory, setClearingHistory] = useState(false);
   const [isExtractingPlate, setIsExtractingPlate] = useState(false);
   const [cadastroVtrFormData, setCadastroVtrFormData] = useState<any>({
@@ -4474,13 +4516,13 @@ export default function App() {
         onMarkAllRead={markAllAsRead}
       />
 
-      <AgostoLilasModal 
-        isOpen={showAgostoLilasModal} 
-        onClose={() => setShowAgostoLilasModal(false)} 
+      <SetembroAmareloModal 
+        isOpen={showSetembroAmareloModal} 
+        onClose={() => setShowSetembroAmareloModal(false)} 
       />
 
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20 md:pb-0 md:pl-64 transition-colors duration-300">
-        <AgostoLilasTopBar onOpenInfo={() => setShowAgostoLilasModal(true)} />
+        <SetembroAmareloTopBar onOpenInfo={() => setShowSetembroAmareloModal(true)} />
         {/* Logout Confirmation Modal */}
         {showLogoutModal && (
           <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -4548,13 +4590,13 @@ export default function App() {
 
         {/* Sidebar Desktop */}
         <aside className="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-colors duration-300">
-          <div className="flex flex-col bg-purple-950 text-white border-b-4 border-purple-600 shadow-lg relative overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-900 to-fuchsia-950 px-3 py-1.5 flex items-center justify-between border-b border-purple-700/50">
-              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-purple-200 tracking-wider">
-                <LilacRibbon size={14} />
-                <span>Agosto Lilás</span>
+          <div className="flex flex-col bg-amber-950 text-white border-b-4 border-yellow-500 shadow-lg relative overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-900 to-yellow-950 px-3 py-1.5 flex items-center justify-between border-b border-yellow-600/40">
+              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-yellow-200 tracking-wider">
+                <YellowRibbon size={14} />
+                <span>Setembro Amarelo</span>
               </div>
-              <span className="text-[9px] font-bold text-fuchsia-300 bg-fuchsia-950/60 px-1.5 py-0.5 rounded border border-fuchsia-700/40">Lei Maria da Penha</span>
+              <span className="text-[9px] font-bold text-yellow-300 bg-yellow-950/70 px-1.5 py-0.5 rounded border border-yellow-600/40">Valorização da Vida</span>
             </div>
             <div className="p-5 flex items-center gap-3">
               <div 
@@ -4704,7 +4746,7 @@ export default function App() {
         </nav>
 
         {/* Mobile Header */}
-        <header className="md:hidden bg-purple-950 text-white border-b-4 border-purple-600 p-3.5 flex items-center justify-between sticky top-0 z-[150] shadow-lg">
+        <header className="md:hidden bg-amber-950 text-white border-b-4 border-yellow-500 p-3.5 flex items-center justify-between sticky top-0 z-[150] shadow-lg">
           <div className="flex items-center gap-3">
             <div className="bg-white p-1 rounded-lg shadow-sm">
               <SafeImage 
@@ -4717,8 +4759,8 @@ export default function App() {
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
                 <span className="font-black text-lg tracking-tighter leading-none">{omeOrigem}</span>
-                <span className="px-1.5 py-0.5 bg-fuchsia-600/90 rounded-full text-[8px] font-black text-white uppercase flex items-center gap-0.5 border border-fuchsia-300/30">
-                  <LilacRibbon size={10} /> Lilás
+                <span className="px-1.5 py-0.5 bg-yellow-400 text-slate-950 rounded-full text-[8px] font-black uppercase flex items-center gap-0.5 border border-yellow-300 shadow-sm">
+                  <YellowRibbon size={10} /> Amarelo
                 </span>
               </div>
               <span className="text-[9px] font-bold opacity-80 uppercase">PMPE</span>
@@ -4831,13 +4873,13 @@ export default function App() {
                   />
                 </div>
 
-                <header className="mb-8 p-8 sm:p-10 bg-white dark:bg-slate-900 rounded-[3rem] border-b-[12px] border-purple-600 shadow-2xl relative overflow-hidden flex flex-col items-center text-center z-10 transition-colors">
-                  <div className="absolute top-0 left-0 w-full h-2.5 bg-gradient-to-r from-purple-800 via-fuchsia-600 to-purple-900"></div>
+                <header className="mb-8 p-8 sm:p-10 bg-white dark:bg-slate-900 rounded-[3rem] border-b-[12px] border-yellow-500 shadow-2xl relative overflow-hidden flex flex-col items-center text-center z-10 transition-colors">
+                  <div className="absolute top-0 left-0 w-full h-2.5 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-600"></div>
                   
-                  {/* Agosto Lilás Badge in Dashboard Header */}
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-purple-100 dark:bg-purple-950/80 border border-purple-300 dark:border-purple-800/80 rounded-full mb-5 text-purple-900 dark:text-purple-200 font-extrabold text-xs uppercase tracking-wider shadow-sm">
-                    <LilacRibbon size={16} />
-                    <span>Agosto Lilás • Conscientização e Proteção à Mulher</span>
+                  {/* Setembro Amarelo Badge in Dashboard Header */}
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-yellow-100 dark:bg-amber-950/80 border border-yellow-400/80 dark:border-yellow-600/50 rounded-full mb-5 text-amber-950 dark:text-yellow-300 font-extrabold text-xs uppercase tracking-wider shadow-sm">
+                    <YellowRibbon size={16} />
+                    <span>Setembro Amarelo • Prevenção ao Suicídio e Valorização da Vida</span>
                   </div>
 
                   <div className="bg-white dark:bg-slate-800 p-5 rounded-[2.5rem] shadow-xl mb-6 relative z-10 border border-slate-100 dark:border-slate-700">
@@ -4850,7 +4892,7 @@ export default function App() {
                   </div>
                   <div className="relative z-10">
                     <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-slate-100 tracking-tighter mb-2"><span>Olá, {user.displayName?.split(' ')[0]}!</span></h1>
-                    <p className="text-purple-900 dark:text-purple-300 font-black text-2xl uppercase tracking-tight"><span>{omeOrigem}</span></p>
+                    <p className="text-amber-800 dark:text-yellow-400 font-black text-2xl uppercase tracking-tight"><span>{omeOrigem}</span></p>
                     <p className="text-slate-500 dark:text-slate-400 font-bold text-base uppercase tracking-widest opacity-60"><span>PMPE</span></p>
                     <div className="flex flex-col items-center justify-center gap-2 mt-4">
                       <div className="flex items-center justify-center gap-4">
@@ -4868,50 +4910,51 @@ export default function App() {
                   </div>
                 </header>
 
-                {/* Card de Destaque: Agosto Lilás - Violência Contra a Mulher NÃO! */}
-                <div className="p-6 sm:p-8 bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 text-white rounded-[2.5rem] border border-purple-500/40 shadow-2xl overflow-hidden relative mb-8 group">
+                {/* Card de Destaque: Setembro Amarelo - A Vida é a Melhor Escolha */}
+                <div className="p-6 sm:p-8 bg-gradient-to-br from-amber-950 via-yellow-950 to-amber-900 text-white rounded-[2.5rem] border border-yellow-500/40 shadow-2xl overflow-hidden relative mb-8 group">
                   {/* Decorative background ribbon watermark */}
                   <div className="absolute -right-12 -bottom-12 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-700">
-                    <LilacRibbon size={260} />
+                    <YellowRibbon size={260} />
                   </div>
                   
                   <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                     <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-fuchsia-500 to-purple-700 rounded-2xl flex items-center justify-center border border-purple-300/40 shadow-xl shrink-0 p-3">
-                        <LilacRibbon size={38} />
+                      <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-2xl flex items-center justify-center border border-yellow-200/50 shadow-xl shrink-0 p-3">
+                        <YellowRibbon size={38} />
                       </div>
                       <div className="space-y-1.5 max-w-2xl">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[10px] font-black bg-fuchsia-500/30 border border-fuchsia-400/40 text-fuchsia-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                          <span className="text-[10px] font-black bg-yellow-400 text-slate-950 border border-yellow-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                             CAMPANHA NACIONAL
                           </span>
-                          <span className="text-[10px] font-bold text-purple-300 uppercase tracking-widest">
-                            LEI MARIA DA PENHA (11.340/06)
+                          <span className="text-[10px] font-bold text-yellow-300 uppercase tracking-widest">
+                            VALORIZAÇÃO DA VIDA • CVV 188
                           </span>
                         </div>
                         <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                          Agosto Lilás: Pelo Fim da Violência Contra a Mulher
+                          Setembro Amarelo: A Vida é a Melhor Escolha
                         </h3>
-                        <p className="text-purple-200/90 text-xs sm:text-sm font-medium leading-relaxed">
-                          A Polícia Militar de Pernambuco fortalece o compromisso no combate à violência doméstica e familiar. Proteção, acolhimento e respeito a todas as mulheres!
+                        <p className="text-yellow-100/90 text-xs sm:text-sm font-medium leading-relaxed">
+                          A Polícia Militar de Pernambuco apoia a campanha brasileira de conscientização sobre a prevenção ao suicídio. Cuidar de você e de quem está ao seu lado é uma missão diária. Falar é o primeiro passo para o acolhimento!
                         </p>
                       </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-3 w-full lg:w-auto shrink-0 relative z-10">
                       <a 
-                        href="tel:180" 
-                        className="px-5 py-3.5 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black rounded-xl shadow-lg shadow-fuchsia-600/30 transition-all text-center flex items-center justify-center gap-2 active:scale-95 text-sm border border-fuchsia-400/40"
+                        href="tel:188" 
+                        className="px-5 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black rounded-xl shadow-lg shadow-yellow-500/20 transition-all text-center flex items-center justify-center gap-2 active:scale-95 text-sm border border-yellow-200"
+                        title="Ligue 188 - CVV (24h, gratuito)"
                       >
                         <Phone size={16} />
-                        <span>Disque 180 (Central)</span>
+                        <span>Disque 188 (CVV Apoio)</span>
                       </a>
                       <button 
-                        onClick={() => setShowAgostoLilasModal(true)}
-                        className="px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl border border-purple-300/30 transition-all text-center flex items-center justify-center gap-2 active:scale-95 text-sm"
+                        onClick={() => setShowSetembroAmareloModal(true)}
+                        className="px-5 py-3.5 bg-white/10 hover:bg-white/20 text-yellow-100 font-bold rounded-xl border border-yellow-400/30 transition-all text-center flex items-center justify-center gap-2 active:scale-95 text-sm"
                       >
-                        <Info size={16} />
-                        <span>Ver Orientações PMPE</span>
+                        <Heart size={16} className="text-yellow-400" />
+                        <span>Orientações & Apoio</span>
                       </button>
                     </div>
                   </div>
